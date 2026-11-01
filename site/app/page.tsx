@@ -399,6 +399,13 @@ export default function Page() {
             </div>
             <div>
               <h4 className="mono">Meta</h4>
+              <a
+                href="https://github.com/Dzuhaib/AI-SaaS-production-video-generator"
+                target="_blank"
+                rel="noreferrer"
+              >
+                GitHub
+              </a>
               <span>MIT License</span>
               <span>v0.1.0</span>
               <span>Node ≥ 20.11</span>

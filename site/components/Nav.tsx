@@ -54,6 +54,17 @@ export function Nav() {
         </nav>
 
         <div className="nav-actions">
+          <a
+            className="nav-github"
+            href="https://github.com/Dzuhaib/AI-SaaS-production-video-generator"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Urlume on GitHub"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 .5C5.73.5.9 5.33.9 11.6c0 4.9 3.17 9.06 7.57 10.53.55.1.75-.24.75-.53 0-.26-.01-1.13-.02-2.05-3.08.67-3.73-1.31-3.73-1.31-.5-1.28-1.23-1.62-1.23-1.62-1-.69.08-.67.08-.67 1.11.08 1.69 1.14 1.69 1.14.99 1.69 2.59 1.2 3.22.92.1-.72.39-1.2.7-1.48-2.46-.28-5.05-1.23-5.05-5.48 0-1.21.43-2.2 1.14-2.98-.11-.28-.49-1.41.11-2.94 0 0 .93-.3 3.05 1.14a10.6 10.6 0 0 1 2.78-.37c.94 0 1.89.13 2.78.37 2.12-1.44 3.05-1.14 3.05-1.14.6 1.53.22 2.66.11 2.94.71.78 1.14 1.77 1.14 2.98 0 4.26-2.6 5.19-5.07 5.47.4.34.75 1.02.75 2.06 0 1.49-.01 2.69-.01 3.06 0 .29.2.64.76.53a11.1 11.1 0 0 0 7.56-10.53C23.1 5.33 18.27.5 12 .5Z" />
+            </svg>
+          </a>
           <span className="nav-version">v0.1.0</span>
           <a className="nav-install" href="#install">
             Install the CLI
@@ -91,6 +102,13 @@ export function Nav() {
         </nav>
         <div className="mobile-foot">
           <span>AI product films, from a URL</span>
+          <a
+            href="https://github.com/Dzuhaib/AI-SaaS-production-video-generator"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub ↗
+          </a>
           <span className="mono">v0.1.0 · MIT</span>
         </div>
       </div>
