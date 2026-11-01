@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 
 const LINKS = [
-  { href: '#pipeline', label: 'Pipeline' },
-  { href: '#craft', label: 'Craft' },
-  { href: '#delivery', label: 'Delivery' },
+  { href: '#how', label: 'How it works' },
+  { href: '#features', label: 'Features' },
   { href: '#install', label: 'Install' },
 ];
 
@@ -67,7 +66,7 @@ export function Nav() {
           </a>
           <span className="nav-version">v0.1.0</span>
           <a className="nav-install" href="#install">
-            Install the CLI
+            Install Urlume
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <path d="M3 8h9M8.5 3.5 13 8l-4.5 4.5" />
             </svg>
