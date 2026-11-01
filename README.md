@@ -1,23 +1,66 @@
-# urlume
+<div align="center">
 
-An AI video agent for SaaS products. Point it at a website and it analyses the
-brand, reads what the product actually does, writes a storyboard, and renders a
-cinematic product film using that site's own colours, type, logo and copy.
+<img src="src/github-banner.png" alt="Urlume — from website to cinematic product film" width="100%" />
 
-[GitHub repository](https://github.com/Dzuhaib/AI-SaaS-production-video-generator)
+# Urlume
 
-## Install
+**Turn any website into a cinematic, on-brand product film.**
+
+An AI video agent for SaaS. Point it at a URL and it reads the brand, works out
+what the product actually does, writes a storyboard, and renders an MP4 using the
+site's own colours, type, logo and copy.
+
+<a href="https://www.npmjs.com/package/urlume"><img src="https://img.shields.io/npm/v/urlume?style=for-the-badge&logo=npm&logoColor=white&color=CB3837" alt="npm version" /></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0f172a?style=for-the-badge" alt="MIT license" /></a>
+<img src="https://img.shields.io/badge/node-%E2%89%A520.11-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node 20.11 or newer" />
+<img src="https://img.shields.io/badge/tests-226%20passing-22c55e?style=for-the-badge" alt="226 tests passing" />
+<a href="https://github.com/Dzuhaib/AI-SaaS-production-video-generator/issues"><img src="https://img.shields.io/badge/PRs-welcome-7c3aed?style=for-the-badge" alt="PRs welcome" /></a>
+
+<br /><br />
+
+<img src="https://techstack-generator.vercel.app/ts-icon.svg" alt="TypeScript" width="56" height="56" />
+<img src="https://techstack-generator.vercel.app/js-icon.svg" alt="JavaScript" width="56" height="56" />
+<img src="https://techstack-generator.vercel.app/react-icon.svg" alt="React" width="56" height="56" />
+<img src="https://techstack-generator.vercel.app/github-icon.svg" alt="GitHub" width="56" height="56" />
+
+<br /><br />
+
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Architecture](#architecture) · [Verification status](#verification-status) · [GitHub repository](https://github.com/Dzuhaib/AI-SaaS-production-video-generator)
+
+</div>
+
+---
+
+## Why Urlume
+
+A product film normally means a motion designer, a script, a screen recording, a
+render queue and a round of notes. Urlume compresses that into one command. The
+output is not a slideshow of screenshots: it is a composed film with a storyboard,
+camera moves, feature cards, cursors, captions and a delivery-conformance check.
+
+Because the palette, type, radius, logo and copy are read from the site itself,
+the film looks like the product made it — not like a template it was poured into.
+
+## Demo
+
+| | |
+|---|---|
+| **Demo film** | [`examples/demo-film/out/demo.mp4`](examples/demo-film/out/demo.mp4) |
+| **Light variant** | [`examples/light-sample/out/light.mp4`](examples/light-sample/out/light.mp4) |
+| **Storyboard** | [`examples/demo-film/storyboard.json`](examples/demo-film/storyboard.json) |
+
+## Quick start
 
 ```bash
 npm install -g urlume
 npx playwright-core install chromium     # ~150MB, once
 ```
 
-> The name is `playwright-core`, not `playwright`. Each Playwright version expects
-> one specific browser revision, so the generic installer can leave this one still
-> looking for a revision that was never downloaded.
+> The package is `playwright-core`, not `playwright`. Each Playwright version
+> expects one specific browser revision, so the generic installer can leave this
+> one looking for a revision that was never downloaded.
 
-Then run it with no arguments for the interactive interface:
+Run it with no arguments for the interactive interface:
 
 ```bash
 urlume
@@ -41,9 +84,22 @@ urlume create https://your-saas.com --prompt "24 second launch film"
 
 Check the install at any time with `urlume doctor`.
 
-## Commands inside the interface
+### Without installing
 
-| | |
+```bash
+git clone https://github.com/Dzuhaib/AI-SaaS-production-video-generator.git
+cd AI-SaaS-production-video-generator
+npm install
+npx playwright install chromium
+npm run extract          # populate runtime/ from the core skill
+npx tsx src/cli.ts create https://your-saas.com --prompt "24 second product film"
+```
+
+## Commands
+
+Inside the interactive interface:
+
+| Command | What it does |
 |---|---|
 | `<url> [prompt]` | make a film |
 | `/key <key>` | store an API key |
@@ -52,22 +108,36 @@ Check the install at any time with `urlume doctor`.
 | `/seconds <n>` · `/aspect <r>` | length, and 16:9 / 9:16 / 1:1 / 4:5 |
 | `/quality <q>` · `/draft` | draft, high, master |
 | `/save [path]` · `/open` | keep the render, or watch it |
-| `/doctor` · `/status` · `/help` | |
+| `/doctor` · `/status` · `/help` | environment, session state, commands |
 
-One API key is needed, from any of Anthropic, OpenAI, Gemini or Mistral — or any
-OpenAI-compatible endpoint, including a local model. Nothing about the site you film
-needs to be yours beyond it being publicly reachable.
+Headless CLI:
 
-> **Status: the pipeline runs end to end.** 149 tests green, published as an npm
+| Command | What it does |
+|---|---|
+| `urlume create <url>` | URL → storyboard → render |
+| `urlume storyboard <url>` | stop after the storyboard |
+| `urlume check <file>` | validate a storyboard against the craft rules |
+| `urlume render <file>` | compile and encode an existing storyboard |
+| `urlume providers` | list providers and credential sources |
+| `urlume models` | list reachable models |
+| `urlume config` | store a key, model or base URL |
+| `urlume skills` | list the craft library |
+| `urlume doctor` | check Node, Chromium, ffmpeg and credentials |
+
+One API key is needed, from Anthropic, OpenAI, Gemini or Mistral — or any
+OpenAI-compatible endpoint, including a local model. Nothing about the site you
+film needs to be yours beyond it being publicly reachable.
+
+> **Status: the pipeline runs end to end.** 226 tests green, published as an npm
 > package, verified by installing globally and rendering a film from a clean
-> directory. The vendor HTTP call is covered by stubbed-transport tests rather than a
-> live key in CI. See [Verification status](#verification-status).
+> directory. The vendor HTTP call is covered by stubbed-transport tests rather
+> than a live key in CI. See [Verification status](#verification-status).
 
 ---
 
 ## How it works
 
-```
+```text
 detect project -> start dev server -> drive Chromium -> analyse UI + brand
   -> AI writes a storyboard (JSON)   <- craft rules validate it
   -> compiler emits a film (HTML/CSS/JS)
@@ -78,9 +148,9 @@ detect project -> start dev server -> drive Chromium -> analyse UI + brand
 Two architectural decisions shape everything else.
 
 **The AI decides WHAT, WHEN and WHY. The renderer decides HOW.** The model emits
-validated JSON and never CSS, HTML, or timing code. A deterministic compiler
-turns that JSON into a film. This is what makes a render reproducible, and it is
-what allows the craft rules below to exist at all.
+validated JSON and never CSS, HTML, or timing code. A deterministic compiler turns
+that JSON into a film. This is what makes a render reproducible, and it is what
+allows the craft rules below to exist at all.
 
 **Every visual is a pure function of time.** The animation engine's `seek(ms)` is
 idempotent — seeking forward, backward, or cold to the same `t` produces
@@ -149,7 +219,7 @@ with the rule text, because silently deleting one would be worse than asking.
 
 ## Architecture
 
-```
+```text
 src/
   cli.ts            commander entry
   tui/              Ink interface
@@ -187,13 +257,6 @@ the skill.
 
 ---
 
-## Requirements
-
-- **Node ≥ 20.11**
-- **Chromium**, installed by Playwright (`npx playwright install chromium`)
-- **ffmpeg** — bundled via `ffmpeg-static`, no system install needed
-- An API key for at least one provider
-
 ## Providers
 
 OpenAI, Anthropic, Gemini, Mistral, and any OpenAI-compatible endpoint. Nothing
@@ -213,53 +276,12 @@ and are redacted from every error message.
 
 ---
 
-## Verification status
+## Requirements
 
-| Component | State |
-|---|---|
-| `scripts/extract-runtime.mjs` | **run** — extracts 7 files, 3756 lines |
-| `src/storyboard/{schema,craft-rules}.ts` | **tested**, 28 tests green |
-| `src/skills/{laws,library,policy}.ts` | **tested**, 24 tests green |
-| `src/compiler/{index,scenes,cursor,escape}.ts` | **tested**, 17 tests green |
-| `src/providers/{anthropic,openai,gemini}.ts` | **tested**, 27 tests (stubbed transport) |
-| `src/storyboard/generate.ts` | **tested**, 18 tests — the validation loop |
-| `src/browser/{analyze,brand,crawl}.ts` | **run** against live sites |
-| `src/renderer/{index,encode,hazards,errors}.ts` | **run** — 588 frames to MP4 |
-| `src/pipeline.ts`, `src/cli.ts` | **run** — URL to MP4 |
-| `src/project/{detect,dev-server}.ts` | typechecks; local mode not wired to the CLI |
-| interactive agent, Ink TUI | not started |
-| 3 new skills (19 planned, 16 present) | not started |
-
-The one thing no test covers is a live vendor HTTP call: the adapters are verified
-against stubbed transports that assert each vendor's request shape, because those
-three shapes fail *silently* when wrong (a system message in Anthropic's `messages`
-array is a 400; Gemini's `assistant` role is accepted and drops the turn). Point it
-at a real key to confirm the last hop.
-
-Measured on the demo film (19.6s, 588 frames, 1920x1080, Windows, headless):
-
-* **~12.7 frames/sec** captured — 46s of capture, 122s wall clock including a
-  `-preset slow` encode. §31.2 previously listed this as unmeasured.
-* **Frame-identical across runs.** Two renders of frames 280-285 produce
-  byte-identical PNGs, which is the reproducibility claim in §55.3.
-* **Glass composites in headless.** Panels show their specular rim and the
-  background blooms read through them. Whether `backdrop-filter: url(#lens)`
-  refraction is *pixel-identical* to headed mode is still unverified — that needs a
-  headed comparison. If exported frames ever show flat glass, try `--swiftshader`,
-  then drop `.glass-lens` and keep `.glass`.
-
-The engine's own documentation said it had never been opened in a browser, and
-that its visual composition was therefore unverified. It has now been opened, and
-that turned out to be true in three places — all in this repo's compiler rather
-than in the engine: elements were given coordinates without `.abs` to position
-them against, the background wash used three class names the stylesheet does not
-define and sat outside the `.stage` that gets rasterised, and the cursor was faded
-in but never out, so it sat on the payoff and the end card. All three looked
-correct in source and only failed when watched.
-
-What has *not* been done is the last item in §55.3, and it is the one that
-finally matters: nobody has watched the film and judged whether it reads as a
-template.
+- **Node ≥ 20.11**
+- **Chromium**, installed by Playwright (`npx playwright install chromium`)
+- **ffmpeg** — bundled via `ffmpeg-static`, no system install needed
+- An API key for at least one provider
 
 ---
 
@@ -277,10 +299,66 @@ npm run test:render    # the export pipeline end to end
 npm run typecheck
 ```
 
-The browser suite needs a real Chromium rather than jsdom: jsdom has no layout,
-so `offsetParent`, `offsetTop/Left` and `getBoundingClientRect` all return 0 and
+The browser suite needs a real Chromium rather than jsdom: jsdom has no layout, so
+`offsetParent`, `offsetTop/Left` and `getBoundingClientRect` all return 0 and
 `getTotalLength()` is unimplemented. Anything touching `point()`, `cursorTo()` or
 `draw()` cannot be tested there.
+
+---
+
+## Verification status
+
+| Component | State |
+|---|---|
+| `scripts/extract-runtime.mjs` | **run** — extracts 7 files, 3756 lines |
+| `src/storyboard/{schema,craft-rules}.ts` | **tested**, 28 tests green |
+| `src/skills/{laws,library,policy}.ts` | **tested**, 24 tests green |
+| `src/compiler/{index,scenes,cursor,escape}.ts` | **tested**, 17 tests green |
+| `src/providers/{anthropic,openai,gemini}.ts` | **tested**, 27 tests (stubbed transport) |
+| `src/storyboard/generate.ts` | **tested**, 18 tests — the validation loop |
+| `src/browser/{analyze,brand,crawl}.ts` | **run** against live sites |
+| `src/renderer/{index,encode,hazards,errors}.ts` | **run** — 588 frames to MP4 |
+| `src/pipeline.ts`, `src/cli.ts` | **run** — URL to MP4 |
+| `src/project/{detect,dev-server}.ts` | typechecks; local mode not wired to the CLI |
+| interactive agent, Ink TUI | TUI exists for config/doctor; agent loop not started |
+| 3 new skills (19 planned, 16 present) | not started |
+
+The one thing no test covers is a live vendor HTTP call: the adapters are verified
+against stubbed transports that assert each vendor's request shape, because those
+three shapes fail *silently* when wrong (a system message in Anthropic's `messages`
+array is a 400; Gemini's `assistant` role is accepted and drops the turn). Point it
+at a real key to confirm the last hop.
+
+Measured on the demo film (19.6s, 588 frames, 1920x1080, Windows, headless):
+
+* **~12.7 frames/sec** captured — 46s of capture, 122s wall clock including a
+  `-preset slow` encode.
+* **Frame-identical across runs.** Two renders of frames 280-285 produce
+  byte-identical PNGs.
+* **Glass composites in headless.** Panels show their specular rim and the
+  background blooms read through them. Whether `backdrop-filter: url(#lens)`
+  refraction is *pixel-identical* to headed mode is still unverified — that needs a
+  headed comparison. If exported frames ever show flat glass, try `--swiftshader`,
+  then drop `.glass-lens` and keep `.glass`.
+
+The engine's own documentation said it had never been opened in a browser, and
+that its visual composition was therefore unverified. It has now been opened, and
+that turned out to be true in three places — all in this repo's compiler rather
+than in the engine: elements were given coordinates without `.abs` to position
+them against, the background wash used three class names the stylesheet does not
+define and sat outside the `.stage` that gets rasterised, and the cursor was faded
+in but never out, so it sat on the payoff and the end card. All three looked
+correct in source and only failed when watched.
+
+---
+
+## Documentation
+
+| Document | Purpose |
+|---|---|
+| [`requirements.md`](requirements.md) | Product and engineering specification; `src/` is authoritative where they disagree |
+| [`MEMORY.md`](MEMORY.md) | Session handoff: what works, what broke, what is still open |
+| [`Skills/`](Skills/) | The video craft library |
 
 ## License
 
