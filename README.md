@@ -4,6 +4,8 @@ An AI video agent for SaaS products. Point it at a website and it analyses the
 brand, reads what the product actually does, writes a storyboard, and renders a
 cinematic product film using that site's own colours, type, logo and copy.
 
+[GitHub repository](https://github.com/Dzuhaib/AI-SaaS-production-video-generator)
+
 ## Install
 
 ```bash

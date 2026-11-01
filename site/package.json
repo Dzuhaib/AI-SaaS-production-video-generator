@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "description": "Landing page for the videoai CLI.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dzuhaib/AI-SaaS-production-video-generator.git",
+    "directory": "site"
+  },
   "scripts": {
     "dev": "next dev -p 4173",
     "build": "next build",

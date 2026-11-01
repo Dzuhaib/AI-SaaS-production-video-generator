@@ -4,6 +4,14 @@
   "description": "URL → product video. Turn any website into a beautiful AI-powered explainer video.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dzuhaib/AI-SaaS-production-video-generator.git"
+  },
+  "homepage": "https://github.com/Dzuhaib/AI-SaaS-production-video-generator#readme",
+  "bugs": {
+    "url": "https://github.com/Dzuhaib/AI-SaaS-production-video-generator/issues"
+  },
   "keywords": [
     "video",
     "ai",
