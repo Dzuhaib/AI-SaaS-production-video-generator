@@ -1,0 +1,28 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Work directory (analysis cache, storyboards, compiled films, renders)
+.urlume/
+# Left by builds from before the rename
+.genvid/
+
+# Frame scratch directories from an interrupted render
+.urlume-frames-*/
+.genvid-frames-*/
+
+# Packed tarballs
+*.tgz
+
+# Render artefacts
+*.mp4
+*.wav
+!examples/**/*.mp4
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

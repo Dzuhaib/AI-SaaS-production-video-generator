@@ -1,0 +1,790 @@
+/* explainer.css — motion tokens, style presets, glass material, stage layout
+   Part of the saas-explainer-motion skill.
+
+   Design canvas is a FIXED pixel stage (default 1920x1080) that is scaled to
+   fit the viewport. Every px value in your scenes is therefore absolute and
+   predictable, and a headless screenshot at 1920x1080 is pixel-identical to
+   what you saw in the browser. */
+
+/* 1. MOTION TOKENS  —  the FILM clock
+   Explainer motion is NOT UI motion. A viewer is watching, not waiting, so
+   beats run roughly 1.5-2.5x slower than the same move inside a shipping app.
+   Use these for video. Use the --ui-* set only for in-frame product UI that is
+   meant to read as a real interface responding to a click. */
+:root {
+  /* Easing. Sourced values (easings.net / Material 3 / Core Animation).      */
+  --e-out-expo:      cubic-bezier(0.16, 1, 0.30, 1);   /* hero curve          */
+  --e-out-quint:     cubic-bezier(0.22, 1, 0.36, 1);   /* workhorse entrance  */
+  --e-out-quart:     cubic-bezier(0.25, 1, 0.50, 1);
+  --e-out-cubic:     cubic-bezier(0.33, 1, 0.68, 1);   /* small system moves  */
+  --e-out-circ:      cubic-bezier(0.00, 0.55, 0.45, 1);
+  --e-out-back:      cubic-bezier(0.34, 1.56, 0.64, 1);/* small elements only */
+  --e-in-out-cubic:  cubic-bezier(0.65, 0, 0.35, 1);   /* A->B, camera pans   */
+  --e-in-out-quint:  cubic-bezier(0.83, 0, 0.17, 1);   /* whip pan, snap      */
+  --e-in-expo:       cubic-bezier(0.70, 0, 0.84, 0);   /* rip off-frame       */
+  --e-in-cubic:      cubic-bezier(0.32, 0, 0.67, 0);
+  --e-soft-land:     cubic-bezier(0.05, 0.70, 0.10, 1);/* M3 emph. decelerate */
+  --e-standard:      cubic-bezier(0.20, 0, 0, 1);      /* M3 standard         */
+  --e-linear:        linear;                            /* loops/spinners only */
+
+  /* Duration, film clock (ms). */
+  --d-tick:   120ms;   /* cursor click ring, tiny state flip                  */
+  --d-micro:  200ms;   /* toggle, checkbox, badge pop                         */
+  --d-fast:   320ms;   /* row highlight, tooltip, tab indicator               */
+  --d-base:   480ms;   /* card enter, list item, chart bar                    */
+  --d-slow:   720ms;   /* panel, modal, device frame                          */
+  --d-hero:  1000ms;   /* headline, logo lockup, big reveal                   */
+  --d-scene: 1400ms;   /* full scene transition, camera push                  */
+
+  /* Interactive-UI clock, for fake product UI reacting to a fake click.      */
+  --ui-fast:  150ms;
+  --ui-base:  240ms;
+  --ui-slow:  360ms;
+
+  /* Stagger. Below 40ms reads simultaneous; above ~110ms reads as a queue.   */
+  --stagger-tight:  40ms;
+  --stagger-base:   60ms;
+  --stagger-loose:  90ms;
+
+  /* Holds — dead air is a feature. Let a reveal breathe before the next beat.*/
+  --hold-short: 400ms;
+  --hold-base:  800ms;
+  --hold-long: 1400ms;
+}
+
+/* 2. PRESET: APPLE  (the default when the user does not specify a style)
+   Dark, near-black, elevated grays, one confident accent, generous negative
+   space, tight negative tracking on display type, soft multi-layer shadows. */
+:root,
+[data-preset="apple"] {
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter",
+                  "Helvetica Neue", Arial, sans-serif;
+  --font-text:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+                  "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Tracking tightens as size grows — this is the single biggest "Apple"
+     typographic tell after the typeface itself.                              */
+  --track-hero:    -0.045em;
+  --track-display: -0.032em;
+  --track-title:   -0.021em;
+  --track-body:    -0.010em;
+  --track-label:    0.006em;
+  --track-eyebrow:  0.085em;
+
+  /* Type scale, tuned for a 1920x1080 canvas. */
+  --fs-hero:     104px;
+  --fs-display:   72px;
+  --fs-title:     48px;
+  --fs-headline:  34px;
+  --fs-body:      24px;
+  --fs-caption:   18px;
+  --fs-label:     14px;
+
+  /* Surfaces (iOS dark elevated grays). */
+  --bg-base:    #000000;
+  --bg-elev-1:  #1C1C1E;
+  --bg-elev-2:  #2C2C2E;
+  --bg-elev-3:  #3A3A3C;
+  --bg-elev-4:  #48484A;
+  --separator:  rgba(84, 84, 88, 0.60);
+
+  /* Label opacities — Apple's four-step hierarchy, with label-3 nudged from
+     Apple's 0.36 to 0.37 so it clears 3:1. label-3 carries real copy in a film
+     (source attribution, chart titles), so it is held to the 3:1 large-text
+     minimum rather than treated as decoration. label-4 is dividers and
+     disabled states only — never text. Measured, not eyeballed. */
+  --label-1: rgba(255, 255, 255, 0.98);
+  --label-2: rgba(255, 255, 255, 0.60);
+  --label-3: rgba(255, 255, 255, 0.37);
+  --label-4: rgba(255, 255, 255, 0.18);
+
+  /* Accents — iOS dark-mode system colors. */
+  --accent:    #0A84FF;
+  --accent-2:  #5E5CE6;
+  --accent-3:  #BF5AF2;
+  --accent-4:  #64D2FF;
+  --ok:        #30D158;
+  --warn:      #FFD60A;
+  --bad:       #FF453A;
+  --pink:      #FF375F;
+
+  /* Radii. Apple uses continuous "squircle" corners; plain border-radius is
+     the practical web approximation. Keep radius proportional to element size
+     — a 40px radius on a 44px chip looks wrong, on a 600px card it looks right.*/
+  --r-xs:   6px;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+  --r-2xl: 40px;
+  --r-pill: 999px;
+
+  /* Shadows — layered, low-opacity, large-radius. Never one hard shadow.     */
+  --sh-1: 0 1px 2px rgba(0,0,0,.30);
+  --sh-2: 0 2px 6px rgba(0,0,0,.24), 0 8px 20px rgba(0,0,0,.18);
+  --sh-3: 0 4px 12px rgba(0,0,0,.26), 0 18px 44px rgba(0,0,0,.26);
+  --sh-4: 0 8px 24px rgba(0,0,0,.28), 0 40px 96px rgba(0,0,0,.34);
+  --sh-glow: 0 0 0 1px rgba(10,132,255,.28), 0 8px 40px rgba(10,132,255,.30);
+
+  /* In-film cursor. This is the pointer DRAWN INTO the film, not the viewer's
+     OS pointer — that one is hidden over the stage. --cursor-core derives from
+     --accent so every preset themes its own arrow with no per-preset block;
+     override any of these in a preset to art-direct it.
+
+     --cursor-size is the arrow's HEIGHT. 26px on a 1920-wide stage matches the
+     apparent size of a real pointer on a 1080p screen; go much bigger and the
+     film reads as a cartoon, much smaller and it disappears on a phone. */
+  --cursor-size:       26px;
+  --cursor-fill:       rgba(255,255,255,0.86);
+  --cursor-fill-solid: #fff;
+  --cursor-fill-quiet: rgba(255,255,255,0.14);
+  --cursor-spec:       rgba(255,255,255,0.95);
+  --cursor-edge:       rgba(0,0,0,0.42);
+  --cursor-core:       var(--accent);
+  --cursor-halo:       color-mix(in srgb, var(--accent) 28%, transparent);
+
+  /* Liquid Glass material knobs. */
+  --glass-blur:      28px;
+  --glass-sat:       180%;
+  --glass-bright:    1.06;
+  --glass-fill:      rgba(255,255,255,0.10);
+  --glass-fill-dim:  rgba(255,255,255,0.045);
+  --glass-edge:      rgba(255,255,255,0.44);
+  --glass-edge-dim:  rgba(255,255,255,0.09);
+  --glass-inner:     rgba(255,255,255,0.13);
+  --glass-spec:      rgba(255,255,255,0.55);
+  --grain:           0.035;
+}
+
+/* 2b. ALTERNATE PRESETS
+   Each overrides only what changes. Motion tokens, radii, type scale and
+   tracking are shared — the presets are a colour and material decision, not a
+   different design system, and a film should not re-time itself because the
+   client picked a light theme.
+
+   Set on <body data-preset="light"> etc. Swap a single accent without leaving
+   the preset by setting --accent inline on the same element. */
+
+/* LIGHT — for embedding in a white page or printing stills. Glass over light
+   backgrounds needs the opposite treatment: the rim goes DARK (a white rim on
+   white is invisible), fill drops, and shadows carry the elevation instead of
+   the highlight. This is the preset people get wrong by only flipping bg/fg. */
+[data-preset="light"] {
+  --bg-base:    #F5F5F7;
+  --bg-elev-1:  #FFFFFF;
+  --bg-elev-2:  #F0F0F2;
+  --bg-elev-3:  #E4E4E7;
+  --bg-elev-4:  #D4D4D8;
+  --separator:  rgba(60, 60, 67, 0.18);
+
+  /* label-2 is 0.75 here, not the 0.60 the dark presets use. Apple's own
+     light-mode secondary label is ~0.60, but that measures 3.50:1 on this
+     background — under the 4.5:1 body minimum. On a dark background the same
+     0.60 white lands at 7.37:1, which is why the dark presets get away with
+     it. Measured, not eyeballed: 0.75 -> 4.92:1. */
+  /* Light mode inverts the cursor too — a white arrow on #F5F5F7 is invisible.
+     Same rule as the glass rim: light-mode chrome is not dark chrome flipped.
+     The rim goes light here because it now has to separate a DARK arrow from a
+     light background, which is the opposite job it does on the dark presets. */
+  --cursor-fill:       rgba(28,28,30,0.88);
+  --cursor-fill-solid: #1C1C1E;
+  --cursor-fill-quiet: rgba(28,28,30,0.12);
+  --cursor-spec:       rgba(0,0,0,0.55);
+  --cursor-edge:       rgba(255,255,255,0.72);
+
+  --label-1: rgba(0, 0, 0, 0.92);
+  --label-2: rgba(60, 60, 67, 0.75);
+  --label-3: rgba(60, 60, 67, 0.58);
+  --label-4: rgba(60, 60, 67, 0.20);
+
+  --accent:    #007AFF;   /* iOS *light*-mode system blue — a shade deeper   */
+  --accent-2:  #5856D6;
+  --accent-3:  #AF52DE;
+  --accent-4:  #32ADE6;
+  --ok:        #34C759;
+  --warn:      #FF9500;
+  --bad:       #FF3B30;
+  --pink:      #FF2D55;
+
+  --sh-1: 0 1px 2px rgba(0,0,0,.06);
+  --sh-2: 0 2px 6px rgba(0,0,0,.07), 0 8px 20px rgba(0,0,0,.05);
+  --sh-3: 0 4px 12px rgba(0,0,0,.08), 0 18px 44px rgba(0,0,0,.07);
+  --sh-4: 0 8px 24px rgba(0,0,0,.09), 0 40px 96px rgba(0,0,0,.10);
+  --sh-glow: 0 0 0 1px rgba(0,122,255,.22), 0 8px 40px rgba(0,122,255,.20);
+
+  --glass-blur:      24px;
+  --glass-sat:       160%;
+  --glass-bright:    1.02;
+  --glass-fill:      rgba(255,255,255,0.60);
+  --glass-fill-dim:  rgba(255,255,255,0.40);
+  --glass-edge:      rgba(0,0,0,0.10);
+  --glass-edge-dim:  rgba(0,0,0,0.05);
+  --glass-inner:     rgba(255,255,255,0.90);
+  --glass-spec:      rgba(255,255,255,0.95);
+  --grain:           0.018;
+}
+
+/* MIDNIGHT — deeper and cooler than apple, with a violet cast. For security,
+   infra, data and developer products. Blur runs higher because the backdrop is
+   darker and there is less contrast to protect. */
+[data-preset="midnight"] {
+  --bg-base:    #06070D;
+  --bg-elev-1:  #0D0F1A;
+  --bg-elev-2:  #151827;
+  --bg-elev-3:  #1F2337;
+  --bg-elev-4:  #2C3149;
+  --separator:  rgba(120, 130, 180, 0.22);
+
+  --label-1: rgba(233, 236, 255, 0.98);
+  --label-2: rgba(196, 202, 235, 0.58);
+  --label-3: rgba(178, 186, 225, 0.49);
+  --label-4: rgba(170, 180, 220, 0.16);
+
+  --accent:    #6E7BFF;
+  --accent-2:  #9B6BFF;
+  --accent-3:  #C77DFF;
+  --accent-4:  #4FD1FF;
+  --ok:        #2FE0A0;
+  --warn:      #FFC94D;
+  --bad:       #FF5C7A;
+  --pink:      #FF4D8D;
+
+  --sh-glow: 0 0 0 1px rgba(110,123,255,.30), 0 8px 44px rgba(110,123,255,.34);
+
+  --glass-blur:      34px;
+  --glass-sat:       190%;
+  --glass-fill:      rgba(150,160,255,0.075);
+  --glass-fill-dim:  rgba(150,160,255,0.035);
+  --glass-edge:      rgba(190,200,255,0.40);
+  --glass-edge-dim:  rgba(190,200,255,0.08);
+  --glass-inner:     rgba(170,180,255,0.12);
+  --grain:           0.042;
+}
+
+/* WARM — near-black with a warm bias, amber accent. For fintech, commerce,
+   creator tools; anywhere blue reads as generic-SaaS. Saturation is pulled
+   back because warm hues bloom harder through the vibrancy filter. */
+[data-preset="warm"] {
+  --bg-base:    #0F0C0A;
+  --bg-elev-1:  #1A1613;
+  --bg-elev-2:  #241E19;
+  --bg-elev-3:  #322A23;
+  --bg-elev-4:  #45392F;
+  --separator:  rgba(120, 100, 84, 0.42);
+
+  --label-1: rgba(255, 250, 245, 0.98);
+  --label-2: rgba(240, 228, 216, 0.58);
+  --label-3: rgba(230, 216, 200, 0.42);
+  --label-4: rgba(225, 210, 195, 0.17);
+
+  --accent:    #FF9F0A;
+  --accent-2:  #FF6B35;
+  --accent-3:  #FFD60A;
+  --accent-4:  #FFB86B;
+  --ok:        #4ADE80;
+  --warn:      #FFD60A;
+  --bad:       #FF5A4E;
+  --pink:      #FF6B8A;
+
+  --sh-glow: 0 0 0 1px rgba(255,159,10,.26), 0 8px 40px rgba(255,159,10,.28);
+
+  --glass-blur:      26px;
+  --glass-sat:       150%;
+  --glass-bright:    1.08;
+  --glass-fill:      rgba(255,240,225,0.085);
+  --glass-fill-dim:  rgba(255,240,225,0.04);
+  --glass-edge:      rgba(255,238,220,0.42);
+  --glass-edge-dim:  rgba(255,238,220,0.09);
+  --glass-inner:     rgba(255,235,215,0.12);
+  --grain:           0.048;
+}
+
+/* MONO — one accent, no hue variety. Editorial, high-contrast, typographic.
+   Every accent token resolves to the same value on purpose: it forces the film
+   to carry meaning through motion, scale and space instead of colour coding.
+   Vibrancy is near-off, since there is little chroma to bloom. */
+[data-preset="mono"] {
+  --bg-base:    #000000;
+  --bg-elev-1:  #0E0E0E;
+  --bg-elev-2:  #171717;
+  --bg-elev-3:  #232323;
+  --bg-elev-4:  #333333;
+  --separator:  rgba(255, 255, 255, 0.16);
+
+  --label-1: rgba(255, 255, 255, 1.00);
+  --label-2: rgba(255, 255, 255, 0.56);
+  --label-3: rgba(255, 255, 255, 0.37);
+  --label-4: rgba(255, 255, 255, 0.15);
+
+  --accent:    #FFFFFF;
+  --accent-2:  #FFFFFF;
+  --accent-3:  #FFFFFF;
+  --accent-4:  #FFFFFF;
+  --ok:        #FFFFFF;
+  --warn:      #FFFFFF;
+  --bad:       #FF3B30;   /* the one exception — failure must read as failure */
+  --pink:      #FFFFFF;
+
+  --sh-glow: 0 0 0 1px rgba(255,255,255,.30), 0 8px 40px rgba(255,255,255,.14);
+
+  --glass-blur:      30px;
+  --glass-sat:       105%;
+  --glass-fill:      rgba(255,255,255,0.07);
+  --glass-fill-dim:  rgba(255,255,255,0.03);
+  --glass-edge:      rgba(255,255,255,0.50);
+  --glass-edge-dim:  rgba(255,255,255,0.10);
+  --glass-inner:     rgba(255,255,255,0.11);
+  --grain:           0.055;
+}
+
+/* 3. LIQUID GLASS MATERIAL
+   Seven-layer stack, back to front: refraction, blur+vibrancy, translucent
+   fill, inner depth, rim highlight, specular sheen, grain.
+
+   Two variants, matching Apple's own split:
+     .glass         decorative chrome. Low blur so the backdrop stays legible.
+     .glass-solid   sits behind text. Heavy blur, because legibility wins.
+
+   IMPORTANT: saturate() between 1.5 and 1.8 is the vibrancy knob. It is the
+   single thing that separates Apple-looking glass from generic frosted blur.
+   Cast shadow converges on 0 8px 32px rgba(0,0,0,.22) across every credible
+   implementation — treat that as canonical. */
+.glass {
+  position: relative;
+  isolation: isolate;                    /* contain the blend modes          */
+  border-radius: var(--r-xl);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(8px) saturate(1.8) brightness(1.12) contrast(1.05);
+          backdrop-filter: blur(8px) saturate(1.8) brightness(1.12) contrast(1.05);
+  box-shadow:
+    inset 1.5px 1.5px 0 rgba(255,255,255,.50),  /* lit bevel: 0 blur is key  */
+    inset 0 0 0 1px rgba(255,255,255,.15),      /* hairline containment      */
+    inset 0 0 12px rgba(255,255,255,.18),       /* diffuse internal glow     */
+    inset 0  1px 1px rgba(255,255,255,.55),     /* directional rim, top      */
+    inset 0 -1px 1px rgba(255,255,255,.28),     /* bottom                    */
+    inset  1px 0 1px rgba(255,255,255,.20),     /* sides                     */
+    inset -1px 0 1px rgba(255,255,255,.20),
+    0 8px 32px rgba(0,0,0,.22);                 /* canonical cast shadow     */
+  contain: paint;
+}
+
+/* Behind text. Apple walked blur UP in the iOS 26 betas for exactly this. */
+.glass-solid {
+  -webkit-backdrop-filter: blur(24px) saturate(1.8) contrast(1.05);
+          backdrop-filter: blur(24px) saturate(1.8) contrast(1.05);
+  background: rgba(255,255,255,.07);
+}
+
+/* Tint. A range of tones, not a flat wash — matches Apple's colored-glass
+   model. Drive --glass-tint 0 -> .18 on the timeline to "charge" the glass. */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(160deg,
+    hsl(var(--glass-hue, 211) 100% 62% / calc(var(--glass-tint, 0) * 1.4)) 0%,
+    hsl(var(--glass-hue, 211) 100% 52% / calc(var(--glass-tint, 0) * .5)) 55%,
+    hsl(var(--glass-hue, 211) 100% 45% / calc(var(--glass-tint, 0) * .9)) 100%);
+}
+
+/* Rim. Temani Afif's mask-composite border technique: padding IS the border
+   width, and the xor/exclude composite punches out the middle so only the
+   1px frame paints. Brightest top-left, second highlight bottom-right. */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(145deg,
+    rgba(255,255,255,.70) 0%,
+    rgba(255,255,255,.12) 38%,
+    rgba(255,255,255,.04) 62%,
+    rgba(255,255,255,.42) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+
+/* Chromium only: the actual lens. Blur before AND after the displacement —
+   pre-blur softens the source, post-blur hides feDisplacementMap's lack of
+   supersampling. Filter id must exist in the document (see glass-filters.svg
+   partial in templates/). */
+@supports (backdrop-filter: url(#lens)) {
+  .glass-lens {
+    -webkit-backdrop-filter: blur(1px) url(#lens) blur(2px) saturate(1.8) brightness(1.12);
+            backdrop-filter: blur(1px) url(#lens) blur(2px) saturate(1.8) brightness(1.12);
+  }
+}
+
+/* Specular sheen. A child element, not a pseudo — both pseudos are taken.
+   Position it with --sheen (0..1) from the timeline; do NOT use a CSS
+   animation, that would break deterministic seeking. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sheen-opacity, .5);
+  background: linear-gradient(
+    105deg,
+    transparent calc(var(--sheen, 0) * 140% - 30%),
+    var(--glass-spec) calc(var(--sheen, 0) * 140% - 8%),
+    transparent calc(var(--sheen, 0) * 140% + 14%));
+  mix-blend-mode: plus-lighter;   /* additive; also stops opacity cross-fades
+                                     from visibly blinking */
+}
+
+/* Grain. Kills gradient banding, which is the most common tell that a dark
+   gradient was made in a browser rather than graded. Keep it 2-5%. */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+}
+
+/* Accessibility parity with Apple's Reduce Transparency. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-solid {
+    -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+    background: var(--bg-elev-2);
+  }
+  .sheen { display: none; }
+}
+
+/* 4. STAGE
+   Fixed-size canvas, centred in the window and scaled down to fit. The stage
+   is always dead centre with equal letterboxing on all four sides — a film
+   pinned to one edge reads as a broken web page, not as a film.
+
+   --stage-w/-h default to 16:9 here and are overwritten by timeline.js from
+   the Timeline dimensions, so the JS is the single source of truth. Setting
+   data-aspect on <html> picks a canvas without touching JS; see 4b.
+   --stage-scale is computed by fit() and forced to 1 during render so
+   screenshots come out at native resolution. */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #08080A;
+  overflow: hidden;
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Centring is done with a transform, NOT with grid/flex centring, and that is
+   deliberate — see the note below, it is the single easiest thing to break here.
+
+   `transform: scale()` shrinks what is PAINTED but never what is LAID OUT: the
+   stage's layout box stays 1920x1080 no matter how far it is scaled down. So in
+   any window narrower than 1920 CSS px the box is oversized, and every
+   layout-based centring method fails on an oversized box:
+
+     - grid/flex `place-items: center` — an `auto` track is never shrunk below
+       its max-content base size, so the track stays 1920 wide, the item fills
+       it exactly, and "centre" becomes a no-op. The stage sits at x=0, its
+       centre lands at 960 while the window centre is at ~756, and the film is
+       painted ~200px right of centre and clipped off the right edge.
+     - `margin: auto` on an absolutely positioned box — CSS 2.1 §10.3.7 says
+       that when equal margins would come out negative, ltr sets margin-left to
+       0 and solves for margin-right. Same off-centre result.
+
+   The symptom of getting this wrong is that the film only looks right if you
+   zoom the browser out to ~50% — at 50% the CSS viewport is wide enough that
+   the track finally has positive free space and stretches, so centring starts
+   working again. If someone reports that, this rule is what regressed.
+
+   top/left 50% puts the box's top-left corner at the centre; translate(-50%,
+   -50%) pulls it back by half its own size, so its centre sits at the window
+   centre whatever its size. Percentages in translate resolve against the
+   element's own border box, which is why this is immune to the overflow.
+
+   The `--chrome-h` offset lifts the centre by half the scrub bar's height so
+   the film is centred in the space ABOVE the bar rather than behind it. It is
+   0px unless mount() actually builds the controls. */
+.viewport { position: fixed; inset: 0; overflow: hidden; }
+
+.stage {
+  position: absolute;
+  top: calc(50% - var(--chrome-h, 0px) / 2);
+  left: 50%;
+  width: var(--stage-w, 1920px);
+  height: var(--stage-h, 1080px);
+  overflow: hidden;
+  background: var(--bg-base);
+  /* Order matters: translate first, then scale — CSS applies the RIGHTMOST
+     function first, so the box is scaled about its own centre and then moved
+     into place. Reversing these scales the centring offset too and the film
+     drifts as it shrinks. */
+  transform: translate(-50%, -50%) scale(var(--stage-scale, 1));
+  transform-origin: center center;
+  /* The film draws its OWN pointer, so the viewer's real one would be a second arrow
+     in frame — but hiding it outright means the pointer vanishes the moment it crosses
+     the preview and the viewer cannot find the scrub bar again. It is hidden only once
+     the film is playing AND the mouse has been still for a beat; mount() owns
+     `.cursor-idle` and clears it on any movement, click or keypress. The bar sits
+     outside .stage and always keeps a normal pointer. */
+  cursor: default;
+}
+
+body.cursor-idle .stage { cursor: none; }
+
+/* 4b. ASPECT RATIOS
+   Set on <html>: <html data-aspect="9:16">. The canvas changes and the type
+   scale comes down with it, because 104px hero type that reads at 1920 wide is
+   absurd on a 1080-wide vertical frame.
+
+   Positions inside scenes are hand-placed pixels, so switching aspect on an
+   existing film needs the layout revisited — this changes the canvas, not the
+   composition. Pick the aspect before writing scenes.
+
+   Must match the Timeline dimensions. Mismatch means the preview letterboxes
+   differently from the export; mount() warns in the console if they disagree. */
+
+/* 1:1 — square, for feed posts. */
+[data-aspect="1:1"] {
+  --stage-w: 1080px;
+  --stage-h: 1080px;
+  --fs-hero:     76px;
+  --fs-display:  54px;
+  --fs-title:    38px;
+  --fs-headline: 28px;
+  --fs-body:     21px;
+  --fs-caption:  17px;
+}
+
+/* 9:16 — vertical, for stories and shorts. The narrowest canvas, so it is the
+   one where oversized type breaks the layout first. */
+[data-aspect="9:16"] {
+  --stage-w: 1080px;
+  --stage-h: 1920px;
+  --fs-hero:     72px;
+  --fs-display:  52px;
+  --fs-title:    36px;
+  --fs-headline: 27px;
+  --fs-body:     21px;
+  --fs-caption:  17px;
+}
+
+/* 4:5 — portrait feed. Taller than square, less extreme than 9:16. */
+[data-aspect="4:5"] {
+  --stage-w: 1080px;
+  --stage-h: 1350px;
+  --fs-hero:     76px;
+  --fs-display:  54px;
+  --fs-title:    38px;
+  --fs-headline: 28px;
+  --fs-body:     21px;
+  --fs-caption:  17px;
+}
+
+/* 16:9 stated explicitly so the default is greppable rather than implied. */
+[data-aspect="16:9"] { --stage-w: 1920px; --stage-h: 1080px; }
+
+/* The camera. Animate this for push-ins, pans, and parallax — never animate
+   the stage itself, and never animate scene children for a camera move. */
+.camera {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* Scenes stack. The engine toggles visibility by time range, so overlapping
+   cross-dissolves work. Off-range scenes get display:none to keep paint cheap
+   and to stop offscreen glass from costing blur time every frame. */
+.scene { position: absolute; inset: 0; opacity: 0; }
+
+/* Render mode: strip anything non-deterministic and any preview chrome.
+
+   The renderer loads the page with `?render=1`, which is what puts this class on
+   <body>, so nothing here fires during normal preview. It also removes any chrome
+   it finds structurally — anything outside the stage — so a composition that
+   builds its own control bar without the .preview-ui class still exports clean.
+   Mark custom preview furniture .preview-ui anyway; it is one word and it makes
+   the intent readable. */
+.render-mode .preview-ui { display: none !important; }
+.render-mode * { transition: none !important; animation-play-state: paused !important; }
+/* No OS pointer exists in a headless capture, but be explicit rather than rely on it. */
+.render-mode .stage { cursor: none; }
+
+/* 5. TYPOGRAPHY UTILITIES
+   Tracking is baked per size on purpose. Tight tracking on large type is the
+   loudest Apple typographic signal after the typeface itself. */
+.t-hero {
+  font-family: var(--font-display);
+  font-size: var(--fs-hero);
+  font-weight: 600;
+  letter-spacing: var(--track-hero);
+  line-height: 1.03;
+  color: var(--label-1);
+}
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 600;
+  letter-spacing: var(--track-display);
+  line-height: 1.06;
+  color: var(--label-1);
+}
+.t-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: var(--track-title);
+  line-height: 1.12;
+  color: var(--label-1);
+}
+.t-headline {
+  font-family: var(--font-display);
+  font-size: var(--fs-headline);
+  font-weight: 500;
+  letter-spacing: var(--track-title);
+  line-height: 1.2;
+  color: var(--label-1);
+}
+.t-body {
+  font-family: var(--font-text);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  letter-spacing: var(--track-body);
+  line-height: 1.45;
+  color: var(--label-2);
+}
+.t-caption {
+  font-family: var(--font-text);
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  letter-spacing: var(--track-body);
+  line-height: 1.4;
+  color: var(--label-2);
+}
+.t-eyebrow {
+  font-family: var(--font-text);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0;
+  font-variant-ligatures: none;
+}
+.t-grad {
+  background: linear-gradient(100deg, #fff 0%, #fff 42%, var(--accent-4) 72%, var(--accent-3) 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.tnum { font-variant-numeric: tabular-nums; }  /* stops counters jittering */
+
+/* Line-mask reveal. Wrap each line; the inner span slides up out of the mask.
+   This is the single most useful text entrance in the whole toolkit. */
+.line-mask { overflow: hidden; display: block; }
+.line-mask > span { display: block; will-change: transform; }
+
+/* 6. LAYOUT HELPERS */
+.abs      { position: absolute; }
+.center   { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.center-x { left: 50%; transform: translateX(-50%); }
+.stack    { display: flex; flex-direction: column; }
+.row      { display: flex; align-items: center; }
+.fill     { position: absolute; inset: 0; }
+
+/* Backgrounds: aurora mesh + vignette. Apple leans on a dark field with one
+   or two soft colored blooms, never a busy gradient. */
+.bg-aurora {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(38% 44% at 22% 26%, hsl(211 100% 50% / .30), transparent 70%),
+    radial-gradient(32% 40% at 78% 30%, hsl(266 85% 62% / .24), transparent 70%),
+    radial-gradient(46% 50% at 60% 84%, hsl(190 95% 55% / .16), transparent 72%);
+  filter: blur(20px);
+}
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(72% 62% at 50% 46%, transparent 40%, rgba(0,0,0,.62) 100%);
+}
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(68% 60% at 50% 44%, #000 30%, transparent 100%);
+          mask-image: radial-gradient(68% 60% at 50% 44%, #000 30%, transparent 100%);
+}
+
+/* 7. PREVIEW CHROME  (never rendered into the video) */
+.preview-ui { position: fixed; z-index: 9999; font-family: var(--font-text); }
+.scrub-bar {
+  left: 0; right: 0; bottom: 0;
+  padding: 14px 20px 16px;
+  background: linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,0));
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+.viewport:hover ~ .scrub-bar, .scrub-bar:hover { opacity: 1; }
+.scrub-bar input[type="range"] { flex: 1; accent-color: var(--accent); height: 4px; }
+.scrub-bar button {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--r-sm);
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.scrub-bar .tc {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--label-2);
+  min-width: 116px;
+  font-variant-numeric: tabular-nums;
+}
+.scrub-bar .scene-name {
+  font-size: 12px;
+  color: var(--label-3);
+  min-width: 130px;
+  text-align: right;
+}
+
+/* Caption-safe area. Platform UI eats the bottom ~12% on social. */
+.safe-guide {
+  position: absolute;
+  inset: 5% 5%;
+  border: 1px dashed rgba(255,255,255,.18);
+  pointer-events: none;
+}
+.safe-guide::after {
+  content: "";
+  position: absolute;
+  left: -1px; right: -1px; bottom: -1px;
+  height: 12%;
+  border-top: 1px dashed rgba(255,120,120,.32);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera { transform: none !important; }
+}

@@ -1,0 +1,322 @@
+/* Depth, frames and 3D — the layer the stock engine does not ship.
+ *
+ * Everything here is CSS 3D on the compositor, not WebGL. §16.1 makes that the
+ * default for a reason: a `rotateY` on a glass panel keeps real text, real
+ * backdrop-filter and real hit geometry, costs nothing to rasterise, and stays a
+ * pure function of `t` under frame-by-frame export. A WebGL scene has to be driven
+ * from `t` by hand and read back per frame (§16.2), which is worth it for a product
+ * that is genuinely a 3D object and never worth it for a card that tilts.
+ *
+ * NOTHING in this file sets a colour. Every surface reads from the brand tokens the
+ * compiler writes onto <body> — --accent, --r-md, --glass-* — so the same markup
+ * looks like whichever site was analysed. Hardcoding a hue here is what made every
+ * film look the same.
+ *
+ * The one hard rule: no `transition` and no `@keyframes` on anything the timeline
+ * animates. Under export the browser clock does not advance, so those freeze at
+ * their initial value while everything around them moves.
+ */
+
+/* ---------------------------------------------------------------- *
+ * 1. Perspective scopes
+ * ---------------------------------------------------------------- */
+
+/* A perspective root. Children with a Z translation gain real foreshortening.
+   `perspective-origin` sits slightly above centre because a viewer reads a product
+   shot from just above, not dead level. */
+.scene-3d {
+  perspective: 1800px;
+  perspective-origin: 50% 42%;
+  transform-style: preserve-3d;
+}
+
+.scene-3d-near { perspective: 1100px; }
+.scene-3d-far  { perspective: 2600px; }
+
+/* Any element that carries 3D children needs this, or they flatten into its plane.
+   The most common cause of "my tilt does nothing". */
+.d3 { transform-style: preserve-3d; will-change: transform; }
+
+/* ---------------------------------------------------------------- *
+ * 2. Tilted planes
+ * ---------------------------------------------------------------- */
+
+/* Rest poses. The timeline overrides transform freely; these exist so a static
+   frame already reads as dimensional before any motion runs. */
+.tilt-l  { transform: perspective(1800px) rotateY(14deg)  rotateX(4deg); }
+.tilt-r  { transform: perspective(1800px) rotateY(-14deg) rotateX(4deg); }
+.tilt-up { transform: perspective(1800px) rotateX(-10deg); }
+.tilt-lay{ transform: perspective(1600px) rotateX(52deg) rotateZ(-8deg); }
+
+/* A deck of stacked planes — versions, results, message threads. Each layer sits
+   further back and lower, so the group reads as depth rather than as a list. */
+.deck { position: relative; transform-style: preserve-3d; }
+.deck > * { position: absolute; inset: 0; }
+.deck > :nth-child(1) { transform: translate3d(0, 0, 0); }
+.deck > :nth-child(2) { transform: translate3d(22px, 26px, -60px); opacity: .82; }
+.deck > :nth-child(3) { transform: translate3d(44px, 52px, -120px); opacity: .58; }
+.deck > :nth-child(4) { transform: translate3d(66px, 78px, -180px); opacity: .34; }
+
+/* ---------------------------------------------------------------- *
+ * 3. Frames — device and window chrome
+ * ---------------------------------------------------------------- */
+
+/* A frame earns its place when the film needs to say *where* something lives: a
+   phone for a message, a browser for a dashboard. Proportions are real; a laptop
+   at the wrong aspect looks subtly fake in a way viewers notice without knowing
+   why. */
+
+.frame-window {
+  position: relative;
+  border-radius: var(--r-lg, 18px);
+  overflow: hidden;
+  background: var(--glass-bg, rgba(255,255,255,.05));
+  border: 1px solid var(--glass-edge, rgba(255,255,255,.12));
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.18),
+    0 18px 50px rgba(0,0,0,.32),
+    0 1px 0 rgba(255,255,255,.10) inset;
+}
+
+/* Title bar with traffic lights, drawn from tokens so it inverts correctly on a
+   light brand instead of staying dark. */
+.frame-bar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: var(--glass-bg-2, rgba(255,255,255,.04));
+  border-bottom: 1px solid var(--glass-edge, rgba(255,255,255,.10));
+}
+.frame-dot { width: 11px; height: 11px; border-radius: 50%; opacity: .55; background: currentColor; }
+.frame-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-3, rgba(255,255,255,.5));
+  letter-spacing: .01em;
+}
+
+/* Phone. 19.5:9, the modern aspect — a 16:9 "phone" reads as a 2014 mockup. */
+.frame-phone {
+  position: relative;
+  width: 380px;
+  aspect-ratio: 9 / 19.5;
+  border-radius: 46px;
+  padding: 12px;
+  background: linear-gradient(160deg,
+    var(--glass-edge, rgba(255,255,255,.16)),
+    var(--glass-bg, rgba(255,255,255,.04)));
+  box-shadow:
+    0 0 0 1.5px var(--glass-edge, rgba(255,255,255,.18)),
+    0 30px 70px rgba(0,0,0,.44);
+}
+.frame-phone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: 34px;
+  overflow: hidden;
+  background: var(--bg-base, #0b0d10);
+}
+.frame-notch {
+  position: absolute;
+  top: 12px; left: 50%;
+  width: 108px; height: 26px;
+  margin-left: -54px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.55);
+  z-index: 3;
+}
+
+/* ---------------------------------------------------------------- *
+ * 4. Accent-driven surfaces
+ * ---------------------------------------------------------------- */
+
+/* A panel that carries the brand rather than a generic grey. `color-mix` keeps it
+   derived: change --accent and every one of these follows. */
+.surface-accent {
+  background:
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--accent) 16%, transparent),
+      color-mix(in srgb, var(--accent) 4%, transparent));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--r-md, 14px);
+}
+
+.glow-accent {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+    0 12px 40px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* ---------------------------------------------------------------- *
+ * 4b. Stat block — the big-number proof beat
+ * ---------------------------------------------------------------- */
+
+/* A lone hero metric, rendered as type rather than as a UI card. The value is
+   hero-size on the 16:9 stage and steps down with the aspect scale, so it never
+   turns into an over-set line on a vertical frame. */
+.stat-label {
+  font-family: var(--font-display, system-ui);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.stat-value {
+  font-family: var(--font-display, system-ui);
+  font-size: var(--fs-hero, 104px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  color: var(--label-1, #fff);
+  font-variant-numeric: tabular-nums;
+}
+.stat-body {
+  max-width: 720px;
+  font-size: 26px;
+  line-height: 1.4;
+  color: var(--label-2, rgba(255,255,255,.68));
+}
+
+/* ---------------------------------------------------------------- *
+ * 4c. Film grade — a sibling of .camera, never an ancestor
+ * ---------------------------------------------------------------- */
+
+/* This overlay tints what the camera painted and must never become a backdrop
+   root. It carries no opacity < 1 of its own (only its *background* is
+   translucent), and no transition or @keyframes — so it survives frame-by-frame
+   export unchanged and cannot flatten the glass beneath it. It is an overlay
+   layer painted by the renderer's .stage, which strips nothing inside .stage. */
+.film-grade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: normal;
+}
+
+/* A hairline that fades out — a divider that does not end in a hard stop. */
+.rule-accent {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 55%, transparent) 22%,
+    color-mix(in srgb, var(--accent) 55%, transparent) 78%,
+    transparent);
+}
+
+/* ---------------------------------------------------------------- *
+ * 5. Icons
+ * ---------------------------------------------------------------- */
+
+.icon { display: block; flex: none; }
+
+/* A tile is how an icon gets weight on a 1920 frame. A bare 24px glyph is a speck
+   at film scale. */
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px; height: 68px;
+  border-radius: var(--r-md, 14px);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.icon-tile-lg { width: 96px; height: 96px; border-radius: var(--r-lg, 18px); }
+.icon-tile-sm { width: 46px; height: 46px; border-radius: var(--r-sm, 10px); }
+
+/* Round variant, for a channel or an avatar-like mark. */
+.icon-round { border-radius: 50%; }
+
+/* ---------------------------------------------------------------- *
+ * 6. Logo
+ * ---------------------------------------------------------------- */
+
+/* The extracted logo. Height is set, width follows the artwork, so an SVG of any
+   aspect lands correctly rather than being squashed to a box. */
+.brand-logo { display: block; height: 64px; width: auto; }
+.brand-logo svg { height: 100%; width: auto; display: block; }
+.brand-logo-lg { height: 108px; }
+.brand-logo-sm { height: 40px; }
+
+/* A wordmark fallback for a site with no extractable SVG. */
+.brand-word {
+  font-family: var(--font-display, system-ui);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--label-1, #fff);
+}
+
+/* ---------------------------------------------------------------- *
+ * 7. Layout scaffolds
+ * ---------------------------------------------------------------- */
+
+/* Grids for a feature or channel beat. Absolutely positioned by the compiler, so
+   these only handle the internal arrangement. */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+.stack-v { display: flex; flex-direction: column; gap: 18px; }
+.stack-h { display: flex; align-items: center; gap: 18px; }
+.stack-tight { gap: 10px; }
+
+/* A feature cell: icon, then title, then one line. */
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px;
+  border-radius: var(--r-md, 14px);
+  background: var(--glass-bg, rgba(255,255,255,.045));
+  border: 1px solid var(--glass-edge, rgba(255,255,255,.09));
+}
+.cell-title { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: var(--label-1, #fff); }
+.cell-body  { font-size: 22px; line-height: 1.4; color: var(--label-2, rgba(255,255,255,.68)); }
+
+/* A message bubble, for a conversation beat. */
+.bubble {
+  max-width: 620px;
+  padding: 22px 26px;
+  border-radius: var(--r-lg, 18px);
+  background: var(--glass-bg, rgba(255,255,255,.06));
+  border: 1px solid var(--glass-edge, rgba(255,255,255,.10));
+  font-size: 26px;
+  line-height: 1.35;
+  color: var(--label-1, #fff);
+}
+/* The product's own reply carries the accent, so the two sides of a conversation
+   are distinguishable at a glance and on brand. */
+.bubble-them { border-bottom-left-radius: 6px; }
+.bubble-us {
+  border-bottom-right-radius: 6px;
+  margin-left: auto;
+  background:
+    linear-gradient(150deg,
+      color-mix(in srgb, var(--accent) 22%, transparent),
+      color-mix(in srgb, var(--accent) 8%, transparent));
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+}
+.bubble-meta {
+  margin-top: 10px;
+  font-size: 17px;
+  color: var(--label-3, rgba(255,255,255,.5));
+}
+
+/* ---------------------------------------------------------------- *
+ * 8. Transition helpers
+ * ---------------------------------------------------------------- */
+
+/* Wipes and reveals are driven by the timeline writing a clip inset, so there is no
+   CSS animation to freeze under export. The class only establishes the box. */
+.wipe { clip-path: inset(0 100% 0 0); }
+.wipe-up { clip-path: inset(100% 0 0 0); }
+
+/* A mask for a line of type sliding up from nothing. Opacity must never go on this
+   element — it would become a backdrop root and flatten glass beneath it. */
+.reveal-mask { overflow: hidden; display: block; }
+.reveal-mask > * { display: block; will-change: transform; }

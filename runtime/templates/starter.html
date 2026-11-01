@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+  starter.html — copy this to begin a new explainer.
+
+  It is a working 3-scene film, deliberately minimal: hook, reveal, end card.
+  Delete what you do not need, add scenes as you go. The point is that it runs
+  the moment you open it, so you are editing something alive rather than
+  assembling something dead.
+
+  Open it in a browser and press space. Arrow keys step one frame. The stage is
+  centred in the window with equal letterboxing — that is .viewport's job, so do
+  not add margins or positioning to .stage.
+
+  ASPECT RATIO — set it here and in starter.timeline.js, and keep them in sync:
+    data-aspect="16:9"  1920x1080  landing pages, YouTube   (default)
+    data-aspect="1:1"   1080x1080  square feed posts
+    data-aspect="9:16"  1080x1920  stories, Reels, Shorts
+    data-aspect="4:5"   1080x1350  portrait feed
+  Changing it here resizes the canvas and steps the type scale down, but the
+  scene contents are hand-placed pixels — a vertical cut needs the layout
+  reworked, not just the frame swapped. Decide before writing scenes.
+
+  Paths assume this file sits one level below the skill root, i.e.
+  your-project/starter.html next to your-project/assets/. Adjust if not.
+-->
+<html lang="en" data-preset="apple" data-aspect="16:9">
+<head>
+<meta charset="utf-8">
+<title>Explainer — starter</title>
+<link rel="stylesheet" href="../assets/explainer.css">
+<link rel="stylesheet" href="../assets/components.css">
+</head>
+<body>
+
+<!-- Paste templates/glass-filters.svg here as the first child of <body> if you
+     want real refraction on .glass-lens panels. It must be inline in this
+     document — an external file will not resolve. -->
+
+<div class="viewport">
+<div class="stage">
+<!-- The camera wraps every scene. Animate THIS for push-ins, pans, and
+     cursor-led zooms — never .stage, and never the scene children. Transform on
+     an ancestor is safe for Liquid Glass; opacity/filter/mask are not, so move
+     and scale this freely but never fade it. -->
+<div class="camera" data-el="camera">
+
+  <!-- ================= S1 HOOK — show the problem ================= -->
+  <section class="scene" data-scene="hook">
+    <div class="bg-vignette"></div>
+
+    <div class="abs" style="left:210px; top:210px; width:900px;">
+      <div class="t-eyebrow" data-el="eyebrow" style="margin-bottom:26px;">
+        Tuesday, 4:40 PM
+      </div>
+      <div class="rows" style="position:relative; height:300px;">
+        <!-- Repetition is the argument. Six near-identical rows say "this is
+             every day" better than a sentence claiming it. -->
+        <div class="row-item" data-el="q" style="position:absolute; left:0; right:0; top:0px;">
+          <div class="avatar"></div><span class="name">Where is my invoice?</span>
+        </div>
+        <div class="row-item" data-el="q" style="position:absolute; left:0; right:0; top:56px;">
+          <div class="avatar"></div><span class="name">Invoice for March missing</span>
+        </div>
+        <div class="row-item" data-el="q" style="position:absolute; left:0; right:0; top:112px;">
+          <div class="avatar"></div><span class="name">Can you resend the invoice?</span>
+        </div>
+        <div class="row-item" data-el="q" style="position:absolute; left:0; right:0; top:168px;">
+          <div class="avatar"></div><span class="name">no invoice in my email</span>
+        </div>
+        <div class="row-item" data-el="q" style="position:absolute; left:0; right:0; top:224px;">
+          <div class="avatar"></div><span class="name">Invoice request — urgent</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- The headline arrives AFTER the visual has landed. It confirms what the
+         viewer already noticed, which reads as agreement, not assertion. -->
+    <div class="abs" style="left:1220px; top:420px; width:520px;">
+      <div class="t-display" data-el="hook-line">Same question.<br>Every day.</div>
+    </div>
+  </section>
+
+  <!-- ================= S2 REVEAL — hard cut to the product ================= -->
+  <section class="scene" data-scene="reveal">
+    <div class="bg-aurora" data-el="aurora"></div>
+    <div class="bg-vignette"></div>
+
+    <!-- NOTE the split: transform on the wrapper, opacity on the glass itself.
+         Fading this wrapper would make it a backdrop root and flatten the
+         glass inside it. See "The backdrop-root trap". -->
+    <div class="abs" data-el="hero-wrap"
+         style="left:460px; top:340px; width:1000px; height:400px;">
+      <div class="glass glass-solid" data-el="hero-glass" style="position:absolute; inset:0;">
+        <div class="sheen" data-el="sheen"></div>
+        <div class="grain"></div>
+      </div>
+      <div class="abs" style="left:0; right:0; top:104px; text-align:center;">
+        <div class="logo-lockup" data-el="lock" style="justify-content:center; margin-bottom:28px;">
+          <div class="logo-mark"></div>
+          <div class="logo-word">Yourproduct</div>
+        </div>
+        <div class="t-headline" data-el="tag" style="color:var(--label-2); font-weight:400;">
+          One sentence. What it does, not what it is.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= S3 END CARD — one action ================= -->
+  <section class="scene" data-scene="end">
+    <div class="bg-aurora" data-el="end-aurora" style="opacity:.7"></div>
+    <div class="bg-vignette"></div>
+
+    <div class="abs" style="left:0; right:0; top:410px; text-align:center;">
+      <div class="logo-lockup" data-el="end-lock" style="justify-content:center;">
+        <div class="logo-mark"></div>
+        <div class="logo-word">Yourproduct</div>
+      </div>
+      <div class="row" data-el="end-cta" style="justify-content:center; margin-top:44px; gap:16px;">
+        <div class="btn btn-primary btn-lg">Start free</div>
+        <div class="t-body" style="color:var(--label-3);">yourproduct.com</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Cursor + click ring. Last children of .camera on purpose:
+       - outside every scene, so a cut does not take the cursor with it;
+       - inside .camera, so they scale with a push-in the way a real screen
+         recording would.
+       ONE pair for the whole film, driven by tl.cursorTo(), which aims at an
+       ELEMENT and derives the coordinates so they survive a layout change.
+
+       The path's TIP is at (0,0) — the element's own top-left — so the x/y the
+       engine writes lands on the tip with no offset maths anywhere.
+       Style it by adding one class: .cursor--glass, .cursor--accent,
+       .cursor--outline, or .cursor--soft. The shape stays an arrow either way. -->
+  <svg class="cursor" data-el="cursor" viewBox="0 0 13.4 18.9"
+       style="left:0; top:0; opacity:0;" aria-hidden="true">
+    <path d="M0 0 L0 16.5 L4.2 12.6 L6.9 18.9 L9.7 17.7 L7 11.5 L13.4 11.5 Z"/>
+  </svg>
+  <div class="click-ring" data-el="ring" style="left:0; top:0;"></div>
+
+</div><!-- /camera -->
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<script src="../assets/sfx.js"></script>
+<script src="../assets/timeline.js"></script>
+<script src="./starter.timeline.js"></script>
+</body>
+</html>

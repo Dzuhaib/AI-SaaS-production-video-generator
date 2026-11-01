@@ -1,0 +1,79 @@
+{
+  "$comment": "A generic light-scheme fixture. Its only job is to exercise the light theme path — the strengthened aurora, the light film grade, and the stat layout — because the dark demo film cannot show those. Deliberately anonymous: no real brand, no real product. Real films come from a user's own URL, whose accent, type, radius and logo the pipeline extracts.",
+  "version": 1,
+  "product": "Acme Analytics",
+  "thesis": "A team should believe Acme turns raw events into an answer they can act on.",
+  "duration": 15600,
+  "fps": 30,
+  "aspect": "16:9",
+  "resolution": { "width": 1920, "height": 1080 },
+  "preset": "apple",
+  "brand": {
+    "accent": "#2C7A7B",
+    "scheme": "light",
+    "productName": "Acme Analytics",
+    "tagline": "Answers, not dashboards",
+    "radius": 12
+  },
+  "audio": { "enabled": false, "bed": "none" },
+  "scenes": [
+    {
+      "id": "reveal",
+      "beat": "reveal",
+      "type": "hero",
+      "start": 0,
+      "duration": 3600,
+      "copy": {
+        "eyebrow": "ACME ANALYTICS",
+        "headline": "Answers, not dashboards",
+        "body": "Ask in plain language. Get the number and the why."
+      },
+      "elements": []
+    },
+    {
+      "id": "proof",
+      "beat": "proof",
+      "type": "feature",
+      "start": 3400,
+      "duration": 4600,
+      "copy": { "eyebrow": "BY THE NUMBERS" },
+      "elements": [
+        {
+          "id": "m1",
+          "type": "metric",
+          "text": "Time to first answer",
+          "value": "3.4x faster",
+          "attribution": "sample data, illustrative only",
+          "importance": 0.9
+        }
+      ]
+    },
+    {
+      "id": "how",
+      "beat": "how",
+      "type": "dashboard",
+      "start": 7800,
+      "duration": 4800,
+      "elements": [
+        { "id": "c1", "type": "metric", "text": "Events / month", "value": "10,000+", "attribution": "sample data" },
+        { "id": "c2", "type": "metric", "text": "Queries answered", "value": "98%", "attribution": "sample data" },
+        { "id": "r1", "type": "row", "text": "Weekly active users", "secondary": "up 12%" },
+        { "id": "r2", "type": "row", "text": "Checkout conversion", "secondary": "up 4%" },
+        { "id": "r3", "type": "row", "text": "Churn risk accounts", "secondary": "down 8%" },
+        { "id": "b1", "type": "button", "text": "Open report" }
+      ]
+    },
+    {
+      "id": "end",
+      "beat": "end",
+      "type": "cta",
+      "start": 12400,
+      "duration": 3200,
+      "copy": {
+        "headline": "Ready for answers?",
+        "cta": "Start free trial"
+      },
+      "elements": [{ "id": "cta1", "type": "button", "text": "Start free trial" }]
+    }
+  ]
+}

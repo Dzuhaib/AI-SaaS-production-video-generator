@@ -1,0 +1,514 @@
+/* components.css — fake product UI that reads as real software.
+
+   SCALE NOTE — read this before changing any size below.
+   Real app UI at native size is unreadable in a 1080p video, especially once
+   it's re-encoded by a social platform. Everything here is drawn at roughly
+   1.35x native: body 17px, labels 13px, row height 52px. That is the sweet
+   spot where UI still reads as "an actual app" but survives compression and
+   a phone-sized viewport. Do not drop below ~13px for any text that matters.
+
+   Also: never render a full app at 100% fidelity. Real explainers show a
+   CROP of an interface — 3-6 rows, not 40. Detail you can't read is noise
+   that costs legibility everywhere else. */
+
+/* BROWSER FRAME
+   The traffic-light chrome instantly signals "this is software" without a
+   word of narration. Keep the URL short and real-looking. */
+.browser {
+  position: relative;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--bg-elev-1);
+  box-shadow: var(--sh-4);
+  border: 1px solid rgba(255,255,255,.09);
+}
+.browser-bar {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: rgba(255,255,255,.045);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot-r { background: #FF5F57; }
+.dot-y { background: #FEBC2E; }
+.dot-g { background: #28C840; }
+.browser-url {
+  flex: 1;
+  margin-left: 12px;
+  height: 28px;
+  border-radius: var(--r-xs);
+  background: rgba(0,0,0,.32);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--label-3);
+  font-family: var(--font-text);
+}
+
+/* APP SHELL — sidebar + topbar + content */
+.app { display: flex; height: 100%; background: var(--bg-base); }
+
+.sidebar {
+  width: 232px;
+  flex: none;
+  padding: 18px 12px;
+  background: rgba(255,255,255,.028);
+  border-right: 1px solid rgba(255,255,255,.06);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.side-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--label-1);
+  letter-spacing: -0.015em;
+}
+.side-mark {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(140deg, var(--accent), var(--accent-2));
+  flex: none;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 11px;
+  border-radius: var(--r-sm);
+  font-size: 14.5px;
+  color: var(--label-2);
+  position: relative;
+}
+.nav-item .ico {
+  width: 17px; height: 17px;
+  border-radius: 5px;
+  background: currentColor;
+  opacity: .5;
+  flex: none;
+}
+.nav-item.is-active { color: var(--label-1); background: rgba(255,255,255,.085); }
+.nav-item.is-active .ico { opacity: .95; color: var(--accent); }
+
+.topbar {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.topbar h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--label-1);
+}
+.content { flex: 1; padding: 24px; overflow: hidden; }
+
+/* CARDS, METRICS, BADGES */
+.card {
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: var(--r-md);
+  padding: 18px;
+  box-shadow: var(--sh-1);
+}
+.metric { display: flex; flex-direction: column; gap: 7px; }
+.metric .k {
+  font-size: 13px;
+  color: var(--label-3);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.metric .v {
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--label-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.metric .d { font-size: 13.5px; font-weight: 500; }
+.d-up { color: var(--ok); }
+.d-down { color: var(--bad); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  background: rgba(255,255,255,.1);
+  color: var(--label-2);
+}
+.badge-ok   { background: rgba(48,209,88,.16);  color: #4ADE80; }
+.badge-warn { background: rgba(255,214,10,.16); color: #FDE047; }
+.badge-bad  { background: rgba(255,69,58,.16);  color: #FF6B6B; }
+.badge-info { background: rgba(10,132,255,.18); color: #66B2FF; }
+.badge .dot-s { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* BUTTONS + CONTROLS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--r-sm);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  background: rgba(255,255,255,.1);
+  color: var(--label-1);
+  border: 1px solid rgba(255,255,255,.1);
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(10,132,255,.35);
+}
+.btn-lg { height: 52px; padding: 0 26px; font-size: 17px; border-radius: var(--r-md); }
+
+.field {
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  padding: 0 13px;
+  font-size: 14.5px;
+  color: var(--label-2);
+}
+.switch {
+  width: 46px; height: 27px;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.16);
+  padding: 3px;
+  display: flex;
+}
+.switch .knob {
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.4);
+}
+.switch.is-on { background: var(--ok); }
+.switch.is-on .knob { transform: translateX(19px); }
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #7C8DF5, #C86DD7);
+  border: 2px solid var(--bg-elev-1);
+  flex: none;
+}
+.avatar-stack { display: flex; }
+.avatar-stack .avatar + .avatar { margin-left: -10px; }
+
+/* LISTS + TABLES
+   Row height 52px. Below ~44px rows stop reading as distinct at video scale. */
+.rows { display: flex; flex-direction: column; }
+.row-item {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  border-radius: var(--r-sm);
+  border-bottom: 1px solid rgba(255,255,255,.045);
+  font-size: 14.5px;
+  color: var(--label-2);
+}
+.row-item .name { color: var(--label-1); font-weight: 500; flex: 1; }
+.row-item.is-hot { background: rgba(10,132,255,.10); }
+.th {
+  display: flex;
+  gap: 14px;
+  padding: 0 14px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--label-3);
+}
+
+/* Kanban */
+.board { display: flex; gap: 14px; }
+.col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.col-head {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--label-3);
+  padding: 0 2px 4px;
+}
+.kcard {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--r-sm);
+  padding: 12px;
+  font-size: 14px;
+  color: var(--label-1);
+  box-shadow: var(--sh-1);
+}
+.kcard .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* CHARTS
+   SVG so strokes can be drawn on with stroke-dashoffset and bars can be
+   scaled from the baseline with transform-origin. */
+.chart { width: 100%; height: 100%; display: block; overflow: visible; }
+.bar {
+  transform-origin: 50% 100%;   /* grow from the baseline, never the center */
+  transform-box: fill-box;
+}
+.chart-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.chart-area { opacity: .18; }
+.grid-line { stroke: rgba(255,255,255,.07); stroke-width: 1; }
+.axis-label { font-size: 12px; fill: rgba(255,255,255,.34); font-family: var(--font-text); }
+.donut-track { fill: none; stroke: rgba(255,255,255,.08); }
+.donut-fill {
+  fill: none;
+  stroke-linecap: round;
+  transform: rotate(-90deg);      /* start at 12 o'clock, like every real UI */
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+}
+
+/* CODE + TERMINAL */
+.code {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.65;
+  background: rgba(0,0,0,.42);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  color: #D6DEEB;
+  white-space: pre;
+  tab-size: 2;
+}
+.tok-key { color: #C792EA; }
+.tok-str { color: #C3E88D; }
+.tok-fn  { color: #82AAFF; }
+.tok-num { color: #F78C6C; }
+.tok-com { color: #5C6B80; font-style: italic; }
+.tok-pun { color: #89A4BB; }
+.caret { color: var(--accent); font-weight: 300; }
+
+/* OVERLAYS: toast, modal, tooltip, cursor */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 18px;
+  border-radius: var(--r-md);
+  min-width: 300px;
+  box-shadow: var(--sh-3);
+  font-size: 14.5px;
+  color: var(--label-1);
+}
+.toast .ico-ok {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.tooltip {
+  padding: 9px 13px;
+  border-radius: var(--r-xs);
+  background: rgba(28,28,30,.96);
+  border: 1px solid rgba(255,255,255,.12);
+  font-size: 13px;
+  color: var(--label-1);
+  box-shadow: var(--sh-2);
+  white-space: nowrap;
+}
+
+/* CURSOR — the pointer drawn INSIDE the film, not the viewer's OS pointer.
+
+   This is a prop, like the browser chrome or the fake sidebar: it exists in the
+   film's own coordinate space, moves on the timeline, and renders into the
+   export. The viewer's real pointer is hidden over the stage (`cursor: none`)
+   so there is never a second arrow in frame.
+
+   ALWAYS AN ARROW. A dot, disc, or ring is ambiguous about what it is pointing
+   at — the whole job of this element is to say "this control, right here", and
+   only a tip does that. What changes between films is the STYLING, never the
+   shape: five variants below, all the same silhouette.
+
+   GEOMETRY IS THE CONTRACT. The path is authored so its tip sits on (0,0), the
+   element's own top-left corner. So the hotspot needs no margin correction at
+   all — `transform-origin: 0 0` and the tip is already on whatever x/y the
+   engine writes. The click ring, being round, still centres itself with a
+   negative margin; both then agree on the same point. Get this wrong and the
+   ring blooms a few px off the tip, which reads as sloppy without ever looking
+   like an actual bug.
+
+   transform-origin on the tip also means the press scales the arrow ABOUT the
+   tip, so it stays planted on the target instead of sliding off as it shrinks. */
+.cursor {
+  position: absolute;
+  /* --cursor-size is the arrow's HEIGHT; the width follows the path's aspect
+     (13.4 / 18.9) so the silhouette can never be squashed by a size change. */
+  height: var(--cursor-size);
+  width: calc(var(--cursor-size) * 0.709);
+  /* The tip sits exactly on the box corner, so a stroke would be clipped by the
+     viewBox. Nothing here scrolls, so visible overflow costs nothing. */
+  overflow: visible;
+  transform-origin: 0 0;
+  pointer-events: none;
+  z-index: 60;
+  fill: var(--cursor-fill-solid);
+  stroke: var(--cursor-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  /* A drop-shadow, never backdrop-filter: a dissolving scene is a backdrop root,
+     so a blurred cursor would silently go flat mid-fade. The shadow is what
+     keeps the arrow legible over a light card and a dark hero alike. */
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.5));
+}
+
+/* The five styles. Same arrow, different read — pick one per film and stay with
+   it; a cursor that changes costume mid-film reads as an accident. */
+
+/* GLASS — translucent body, bright rim. The default pairing for Liquid Glass
+   scenes on a dark preset. */
+.cursor--glass {
+  fill: var(--cursor-fill);
+  stroke: var(--cursor-spec);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 2px 7px rgba(0,0,0,.55));
+}
+
+/* ACCENT — filled with the brand colour. Loudest of the five; good when the
+   cursor is the subject of the shot rather than a passenger. */
+.cursor--accent {
+  fill: var(--cursor-core);
+  stroke: var(--cursor-fill-solid);
+  stroke-width: 1.1;
+}
+
+/* OUTLINE — hollow, drawn in the accent. Quietest; use when the UI underneath
+   must stay fully readable through the pointer. */
+.cursor--outline {
+  fill: var(--cursor-fill-quiet);
+  stroke: var(--cursor-core);
+  stroke-width: 1.5;
+}
+
+/* SOFT — rounded silhouette, no visible rim. `paint-order: stroke` lays a fat
+   round-joined stroke UNDER the fill, which is what rounds the corners off; the
+   stroke colour therefore has to match the fill. Reads friendlier, consumer. */
+.cursor--soft {
+  stroke: var(--cursor-fill-solid);
+  stroke-width: 3;
+  paint-order: stroke;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,.5));
+}
+
+/* Click ripple. Same hotspot contract as the cursor, so both take the same x/y. */
+.click-ring {
+  position: absolute;
+  width: 46px; height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 0 18px var(--cursor-halo);
+  pointer-events: none;
+  z-index: 59;
+  opacity: 0;
+}
+
+/* Progress */
+.bar-track {
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.12);
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-4));
+  transform-origin: 0 50%;
+}
+
+/* Skeleton shimmer. --shimmer is driven by the timeline, NOT a CSS animation,
+   so it stays frame-accurate on export. */
+.skeleton {
+  border-radius: var(--r-xs);
+  background:
+    linear-gradient(90deg,
+      rgba(255,255,255,.05) 0%,
+      rgba(255,255,255,.05) calc(var(--shimmer, 0) * 130% - 22%),
+      rgba(255,255,255,.14) calc(var(--shimmer, 0) * 130% - 4%),
+      rgba(255,255,255,.05) calc(var(--shimmer, 0) * 130% + 16%),
+      rgba(255,255,255,.05) 100%);
+}
+
+/* DEVICE FRAMES */
+.phone {
+  position: relative;
+  border-radius: 46px;
+  background: #0B0B0D;
+  padding: 11px;
+  box-shadow: var(--sh-4), inset 0 0 0 1.5px rgba(255,255,255,.14);
+}
+.phone-screen {
+  border-radius: 36px;
+  overflow: hidden;
+  background: var(--bg-base);
+  position: relative;
+}
+.phone-notch {
+  position: absolute;
+  top: 11px; left: 50%;
+  transform: translateX(-50%);
+  width: 108px; height: 28px;
+  border-radius: var(--r-pill);
+  background: #0B0B0D;
+  z-index: 5;
+}
+
+/* END CARD */
+.logo-lockup { display: flex; align-items: center; gap: 16px; }
+.logo-mark {
+  width: 58px; height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 30px rgba(10,132,255,.4);
+}
+.logo-word {
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--label-1);
+}

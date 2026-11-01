@@ -1,0 +1,141 @@
+<!--
+  glass-filters.svg — the real refraction filter for .glass-lens
+
+  HOW TO USE
+  Paste this whole block as the FIRST child of <body>. It cannot be an
+  <img src> or an external <use>: backdrop-filter: url(#lens) only resolves
+  against a filter in the same document tree.
+
+  WHAT IT DOES
+  feDisplacementMap bends the backdrop using a normal map. That bending is the
+  actual difference between Liquid Glass and a plain frosted blur: a blur
+  averages what is behind the panel, refraction MOVES it, so straight lines
+  behind the edge visibly kink. Blur cannot do that at any radius.
+
+  The map is generated with feTurbulence at very low frequency, then heavily
+  blurred, which yields smooth large-scale gradients rather than noise. Feeding
+  raw turbulence into a displacement map is what produces that cheap "frosted
+  bathroom window" look.
+
+  HONEST CAVEATS — read before shipping
+  1. Chromium only. Firefox and Safari ignore url() in backdrop-filter. The
+     @supports guard in explainer.css means those browsers just get the
+     blur+highlight stack, which still reads as glass.
+  2. Edge lensing here is approximate. Apple's real implementation displaces
+     most strongly at the rim and falls off toward the centre, driven by the
+     shape's own signed-distance field. In a backdrop-filter context SourceAlpha
+     is an opaque rect clipped to the border box, so the falloff below follows
+     the rectangular box and ignores border-radius. On a rounded panel the
+     corners get slightly less lensing than they should. Nobody notices at
+     video scale; do not build a hero shot around a close-up of one corner.
+  3. Unverified under headless capture. I could not test whether Chromium's
+     headless compositor rasterises url() backdrop-filters identically to
+     headed mode — no Chrome binary was installable in the authoring sandbox.
+     If exported frames show the glass flat, re-render with --swiftshader, and
+     if that still fails drop .glass-lens and keep .glass.
+-->
+<svg width="0" height="0" style="position:absolute;pointer-events:none"
+     aria-hidden="true" focusable="false">
+  <defs>
+
+    <!-- ===================================================================
+         #lens — the general-purpose refraction filter.
+         Wire it up with: backdrop-filter: blur(1px) url(#lens) blur(2px) ...
+         The pre-blur softens the source so displacement does not smear
+         individual pixels; the post-blur hides feDisplacementMap's lack of
+         supersampling, which otherwise shows as stair-stepping on edges.
+         =================================================================== -->
+    <filter id="lens" x="-15%" y="-15%" width="130%" height="130%"
+            color-interpolation-filters="sRGB">
+
+      <!-- Large, slow-varying noise. baseFrequency this low is the whole
+           trick: 0.008 gives features ~125px across at 1x, i.e. gentle
+           lensing rather than visible grain. -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012"
+                    numOctaves="2" seed="11" stitchTiles="stitch"
+                    result="rawNoise"/>
+
+      <!-- Smooth it into a usable normal map. Without this the displacement
+           reads as texture instead of curvature. -->
+      <feGaussianBlur in="rawNoise" stdDeviation="9" result="softNoise"/>
+
+      <!-- Boost contrast in R and G (the channels the displacement reads) so
+           the effect is visible after blurring flattened it. -->
+      <feComponentTransfer in="softNoise" result="normalMap">
+        <feFuncR type="linear" slope="2.4" intercept="-0.7"/>
+        <feFuncG type="linear" slope="2.4" intercept="-0.7"/>
+        <feFuncB type="linear" slope="0"   intercept="0.5"/>
+      </feComponentTransfer>
+
+      <!-- Rim weighting. Blur the element's own alpha, then invert it, to get
+           a mask that is bright at the edges and dark in the middle. -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="alphaSoft"/>
+      <feComponentTransfer in="alphaSoft" result="rimMask">
+        <feFuncA type="table" tableValues="1 0.35 0"/>
+      </feComponentTransfer>
+
+      <!-- Multiply the normal map by the rim mask so displacement concentrates
+           near the edge, which is where real glass bends light most. -->
+      <feComposite in="normalMap" in2="rimMask" operator="in" result="rimNormal"/>
+
+      <!-- The displacement itself. scale is in px at 1x. 18 is a confident
+           but believable amount for a panel 400-900px wide; above ~40 it
+           stops looking like glass and starts looking like a heat wave. -->
+      <feDisplacementMap in="SourceGraphic" in2="rimNormal"
+                         scale="18"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ===================================================================
+         #lens-soft — half the displacement. Use behind body text, where any
+         refraction at all starts to cost legibility.
+         =================================================================== -->
+    <filter id="lens-soft" x="-12%" y="-12%" width="124%" height="124%"
+            color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009"
+                    numOctaves="2" seed="7" stitchTiles="stitch" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="12" result="s"/>
+      <feComponentTransfer in="s" result="m">
+        <feFuncR type="linear" slope="1.8" intercept="-0.4"/>
+        <feFuncG type="linear" slope="1.8" intercept="-0.4"/>
+      </feComponentTransfer>
+      <feDisplacementMap in="SourceGraphic" in2="m" scale="8"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ===================================================================
+         #lens-strong — for a hero shot where the glass IS the subject and you
+         want the bend to be unmistakable. Too much for anything with text.
+         =================================================================== -->
+    <filter id="lens-strong" x="-20%" y="-20%" width="140%" height="140%"
+            color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.010 0.014"
+                    numOctaves="3" seed="23" stitchTiles="stitch" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="7" result="s"/>
+      <feComponentTransfer in="s" result="m">
+        <feFuncR type="linear" slope="3.1" intercept="-1.0"/>
+        <feFuncG type="linear" slope="3.1" intercept="-1.0"/>
+      </feComponentTransfer>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="a"/>
+      <feComponentTransfer in="a" result="rim">
+        <feFuncA type="table" tableValues="1 0.5 0.05"/>
+      </feComponentTransfer>
+      <feComposite in="m" in2="rim" operator="in" result="rn"/>
+      <feDisplacementMap in="SourceGraphic" in2="rn" scale="34"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ===================================================================
+         #grain-fine — film grain as a filter, for when you want it over the
+         whole frame rather than per-panel. Cheaper than the base64 PNG in
+         .grain because there is no image decode.
+         Apply to a full-bleed div with opacity .03-.05.
+         =================================================================== -->
+    <filter id="grain-fine" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3"
+                    stitchTiles="stitch" seed="3" result="g"/>
+      <feColorMatrix in="g" type="saturate" values="0"/>
+    </filter>
+
+  </defs>
+</svg>

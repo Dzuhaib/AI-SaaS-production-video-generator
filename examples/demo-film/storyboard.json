@@ -1,0 +1,230 @@
+{
+  "$comment": "Hand-written storyboard. Its job is to exercise the whole pipeline — compile, capture, encode — before any AI code exists (§23.1), so it uses every element renderer, a camera move, a cursor gesture and cues. It is also written to pass all 13 craft rules, so `checkCraft` on it should be clean: problem first, one CTA, hard cuts, overlapping scene ranges, varied beat lengths, and the one statistic carries its source.",
+  "version": 1,
+  "product": "Relay",
+  "thesis": "A support lead should believe Relay stops them answering the same ticket by hand.",
+  "duration": 19600,
+  "fps": 30,
+  "aspect": "16:9",
+  "resolution": { "width": 1920, "height": 1080 },
+  "preset": "apple",
+  "brand": {
+    "accent": "#0A84FF",
+    "scheme": "dark",
+    "productName": "Relay",
+    "tagline": "Support that answers itself"
+  },
+  "audio": { "enabled": true, "bed": "none" },
+  "scenes": [
+    {
+      "id": "hook",
+      "beat": "hook",
+      "type": "text",
+      "start": 0,
+      "duration": 4200,
+      "notes": "Show the pain, do not state it. Five near-identical tickets stacking up IS the argument; the headline only names what the viewer has already noticed.",
+      "copy": {
+        "headline": "Every day, the same ticket.",
+        "bodySize": 32
+      },
+      "elements": [
+        { "id": "t1", "type": "row", "text": "Password reset", "secondary": "unresolved", "importance": 0.5 },
+        { "id": "t2", "type": "row", "text": "Password reset", "secondary": "unresolved", "importance": 0.5 },
+        { "id": "t3", "type": "row", "text": "Password reset", "secondary": "unresolved", "importance": 0.5 },
+        { "id": "t4", "type": "row", "text": "Password reset", "secondary": "unresolved", "importance": 0.5 },
+        { "id": "t5", "type": "row", "text": "Password reset", "secondary": "unresolved", "importance": 0.5 }
+      ],
+      "animations": [
+        {
+          "target": ".row-item",
+          "at": 300,
+          "dur": 640,
+          "ease": "outExpo",
+          "stagger": 90,
+          "staggerFrom": "start",
+          "opacity": [0, 1],
+          "y": [26, 0]
+        },
+        {
+          "target": "[data-el=\"headline\"]",
+          "at": 900,
+          "dur": 900,
+          "ease": "outExpo",
+          "opacity": [0, 1],
+          "y": [110, 0]
+        }
+      ],
+      "cues": [{ "name": "tick", "at": 300, "gain": 0.5 }]
+    },
+    {
+      "id": "reveal",
+      "beat": "reveal",
+      "type": "hero",
+      "start": 3900,
+      "duration": 3600,
+      "notes": "Hard cut into relief. Product name plus one line, nothing else on screen.",
+      "copy": {
+        "headline": "Relay",
+        "body": "Every password reset, handled.",
+        "bodySize": 30
+      },
+      "animations": [
+        {
+          "target": "[data-el=\"headline\"]",
+          "at": 200,
+          "dur": 1000,
+          "ease": "outExpo",
+          "opacity": [0, 1],
+          "y": [110, 0]
+        },
+        {
+          "target": "[data-el=\"body\"]",
+          "at": 850,
+          "dur": 700,
+          "ease": "outQuart",
+          "opacity": [0, 1],
+          "y": [18, 0]
+        }
+      ],
+      "cues": [{ "name": "impact", "at": 200, "gain": 0.9 }]
+    },
+    {
+      "id": "demo",
+      "beat": "how",
+      "type": "dashboard",
+      "start": 7200,
+      "duration": 6000,
+      "route": "/dashboard",
+      "notes": "The only beat with real UI, and only a crop of it. The camera leads the cursor by 300ms. The button's own press is NOT authored here — the compiler emits it from the cursor gesture at the engine's real pressAt (at + travel + settle) — so the badge is placed at respondAt: 700 + 620 + 120 + 90 + 110 = 1640.",
+      "elements": [
+        { "id": "q1", "type": "row", "text": "Password reset — Sarah K.", "secondary": "new", "x": 300, "y": 380, "width": 900, "importance": 0.6 },
+        { "id": "q2", "type": "row", "text": "Password reset — Dev T.", "secondary": "new", "importance": 0.6 },
+        { "id": "q3", "type": "row", "text": "Password reset — Ana M.", "secondary": "new", "importance": 0.6 },
+        { "id": "q4", "type": "row", "text": "Password reset — Luis P.", "secondary": "new", "importance": 0.6 },
+        {
+          "id": "draft",
+          "type": "card",
+          "text": "Suggested reply",
+          "secondary": "Here is a reset link. It expires in 15 minutes.",
+          "x": 1260,
+          "y": 380,
+          "width": 380,
+          "importance": 0.9
+        },
+        { "id": "send", "type": "button", "text": "Send all", "x": 1260, "y": 604, "importance": 0.95 },
+        { "id": "sent", "type": "badge", "text": "4 resolved", "x": 1260, "y": 680, "importance": 0.7 }
+      ],
+      "camera": {
+        "target": "[data-el=\"send\"]",
+        "zoom": 1.7,
+        "at": 400,
+        "dur": 1100,
+        "ease": "inOutCubic"
+      },
+      "cursor": [
+        { "target": "[data-el=\"send\"]", "at": 700, "travel": 620, "click": true, "latency": 110 }
+      ],
+      "animations": [
+        {
+          "target": ".row-item",
+          "at": 200,
+          "dur": 640,
+          "ease": "outQuint",
+          "stagger": 90,
+          "staggerFrom": "start",
+          "opacity": [0, 1],
+          "y": [26, 0]
+        },
+        {
+          "target": "[data-el=\"draft\"]",
+          "at": 700,
+          "dur": 760,
+          "ease": "outQuart",
+          "opacity": [0, 1],
+          "y": [16, 0]
+        },
+        {
+          "target": "[data-el=\"sent\"]",
+          "at": 1640,
+          "dur": 620,
+          "ease": "outBack",
+          "opacity": [0, 1],
+          "y": [20, 0]
+        }
+      ],
+      "cues": [{ "name": "success", "at": 1640, "gain": 1 }]
+    },
+    {
+      "id": "payoff",
+      "beat": "payoff",
+      "type": "feature",
+      "start": 12900,
+      "duration": 3200,
+      "hold": 750,
+      "notes": "The moment the promise is kept. Held 750ms — cutting away here is landing a joke and talking over the laugh. The number carries its source or it does not appear.",
+      "elements": [
+        {
+          "id": "m1",
+          "type": "metric",
+          "text": "Median first response",
+          "value": "4.2x faster",
+          "attribution": "internal data, 240 teams, Q2 2025",
+          "x": 660,
+          "y": 430,
+          "width": 600,
+          "importance": 1
+        }
+      ],
+      "animations": [
+        {
+          "target": ".card",
+          "at": 300,
+          "dur": 820,
+          "ease": "softLand",
+          "y": [24, 0],
+          "scale": [0.97, 1]
+        },
+        {
+          "target": ".card",
+          "at": 300,
+          "dur": 620,
+          "ease": "outQuart",
+          "opacity": [0, 1]
+        }
+      ],
+      "cues": [{ "name": "chime", "at": 400, "gain": 0.9 }]
+    },
+    {
+      "id": "end",
+      "beat": "end",
+      "type": "cta",
+      "start": 15800,
+      "duration": 3600,
+      "notes": "One action. Held long enough to read the URL, register the action, and decide.",
+      "copy": {
+        "headline": "Start free trial",
+        "cta": "relay.app",
+        "bodySize": 28
+      },
+      "animations": [
+        {
+          "target": "[data-el=\"headline\"]",
+          "at": 200,
+          "dur": 900,
+          "ease": "outExpo",
+          "opacity": [0, 1],
+          "y": [110, 0]
+        },
+        {
+          "target": "[data-el=\"cta\"]",
+          "at": 800,
+          "dur": 700,
+          "ease": "outQuart",
+          "opacity": [0, 1],
+          "y": [16, 0]
+        }
+      ],
+      "cues": [{ "name": "pad", "at": 200, "gain": 0.6 }]
+    }
+  ]
+}

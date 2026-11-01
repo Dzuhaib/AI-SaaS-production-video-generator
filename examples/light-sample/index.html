@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" data-aspect="16:9">
+<head>
+<meta charset="utf-8">
+<title>Acme Analytics</title>
+<link rel="stylesheet" href="assets/explainer.css">
+<link rel="stylesheet" href="assets/components.css">
+<link rel="stylesheet" href="assets/depth.css">
+</head>
+<body data-preset="light" style="--accent:#2C7A7B; --r-sm:9px; --r-md:12px; --r-lg:19px; --font-display:system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Noto Sans CJK JP&quot;, &quot;Noto Sans JP&quot;, &quot;Hiragino Sans&quot;, &quot;Yu Gothic&quot;, &quot;Meiryo&quot;, &quot;Microsoft YaHei&quot;, &quot;PingFang SC&quot;, &quot;Malgun Gothic&quot;, &quot;Noto Sans Arabic&quot;, &quot;Geeza Pro&quot;, &quot;Segoe UI Historic&quot;, &quot;Noto Sans Hebrew&quot;, &quot;Noto Sans Devanagari&quot;, &quot;Nirmala UI&quot;, &quot;Noto Sans Thai&quot;, &quot;Leelawadee UI&quot;, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;; --font-text:system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Noto Sans CJK JP&quot;, &quot;Noto Sans JP&quot;, &quot;Hiragino Sans&quot;, &quot;Yu Gothic&quot;, &quot;Meiryo&quot;, &quot;Microsoft YaHei&quot;, &quot;PingFang SC&quot;, &quot;Malgun Gothic&quot;, &quot;Noto Sans Arabic&quot;, &quot;Geeza Pro&quot;, &quot;Segoe UI Historic&quot;, &quot;Noto Sans Hebrew&quot;, &quot;Noto Sans Devanagari&quot;, &quot;Nirmala UI&quot;, &quot;Noto Sans Thai&quot;, &quot;Leelawadee UI&quot;, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Noto Color Emoji&quot;">
+
+<!--
+  glass-filters.svg — the real refraction filter for .glass-lens
+
+  HOW TO USE
+  Paste this whole block as the FIRST child of <body>. It cannot be an
+  <img src> or an external <use>: backdrop-filter: url(#lens) only resolves
+  against a filter in the same document tree.
+
+  WHAT IT DOES
+  feDisplacementMap bends the backdrop using a normal map. That bending is the
+  actual difference between Liquid Glass and a plain frosted blur: a blur
+  averages what is behind the panel, refraction MOVES it, so straight lines
+  behind the edge visibly kink. Blur cannot do that at any radius.
+
+  The map is generated with feTurbulence at very low frequency, then heavily
+  blurred, which yields smooth large-scale gradients rather than noise. Feeding
+  raw turbulence into a displacement map is what produces that cheap "frosted
+  bathroom window" look.
+
+  HONEST CAVEATS — read before shipping
+  1. Chromium only. Firefox and Safari ignore url() in backdrop-filter. The
+     @supports guard in explainer.css means those browsers just get the
+     blur+highlight stack, which still reads as glass.
+  2. Edge lensing here is approximate. Apple's real implementation displaces
+     most strongly at the rim and falls off toward the centre, driven by the
+     shape's own signed-distance field. In a backdrop-filter context SourceAlpha
+     is an opaque rect clipped to the border box, so the falloff below follows
+     the rectangular box and ignores border-radius. On a rounded panel the
+     corners get slightly less lensing than they should. Nobody notices at
+     video scale; do not build a hero shot around a close-up of one corner.
+  3. Unverified under headless capture. I could not test whether Chromium's
+     headless compositor rasterises url() backdrop-filters identically to
+     headed mode — no Chrome binary was installable in the authoring sandbox.
+     If exported frames show the glass flat, re-render with --swiftshader, and
+     if that still fails drop .glass-lens and keep .glass.
+-->
+<svg width="0" height="0" style="position:absolute;pointer-events:none"
+     aria-hidden="true" focusable="false">
+  <defs>
+
+    <!-- ===================================================================
+         #lens — the general-purpose refraction filter.
+         Wire it up with: backdrop-filter: blur(1px) url(#lens) blur(2px) ...
+         The pre-blur softens the source so displacement does not smear
+         individual pixels; the post-blur hides feDisplacementMap's lack of
+         supersampling, which otherwise shows as stair-stepping on edges.
+         =================================================================== -->
+    <filter id="lens" x="-15%" y="-15%" width="130%" height="130%"
+            color-interpolation-filters="sRGB">
+
+      <!-- Large, slow-varying noise. baseFrequency this low is the whole
+           trick: 0.008 gives features ~125px across at 1x, i.e. gentle
+           lensing rather than visible grain. -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012"
+                    numOctaves="2" seed="11" stitchTiles="stitch"
+                    result="rawNoise"/>
+
+      <!-- Smooth it into a usable normal map. Without this the displacement
+           reads as texture instead of curvature. -->
+      <feGaussianBlur in="rawNoise" stdDeviation="9" result="softNoise"/>
+
+      <!-- Boost contrast in R and G (the channels the displacement reads) so
+           the effect is visible after blurring flattened it. -->
+      <feComponentTransfer in="softNoise" result="normalMap">
+        <feFuncR type="linear" slope="2.4" intercept="-0.7"/>
+        <feFuncG type="linear" slope="2.4" intercept="-0.7"/>
+        <feFuncB type="linear" slope="0"   intercept="0.5"/>
+      </feComponentTransfer>
+
+      <!-- Rim weighting. Blur the element's own alpha, then invert it, to get
+           a mask that is bright at the edges and dark in the middle. -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="alphaSoft"/>
+      <feComponentTransfer in="alphaSoft" result="rimMask">
+        <feFuncA type="table" tableValues="1 0.35 0"/>
+      </feComponentTransfer>
+
+      <!-- Multiply the normal map by the rim mask so displacement concentrates
+           near the edge, which is where real glass bends light most. -->
+      <feComposite in="normalMap" in2="rimMask" operator="in" result="rimNormal"/>
+
+      <!-- The displacement itself. scale is in px at 1x. 18 is a confident
+           but believable amount for a panel 400-900px wide; above ~40 it
+           stops looking like glass and starts looking like a heat wave. -->
+      <feDisplacementMap in="SourceGraphic" in2="rimNormal"
+                         scale="18"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ===================================================================
+         #lens-soft — half the displacement. Use behind body text, where any
+         refraction at all starts to cost legibility.
+         =================================================================== -->
+    <filter id="lens-soft" x="-12%" y="-12%" width="124%" height="124%"
+            color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009"
+                    numOctaves="2" seed="7" stitchTiles="stitch" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="12" result="s"/>
+      <feComponentTransfer in="s" result="m">
+        <feFuncR type="linear" slope="1.8" intercept="-0.4"/>
+        <feFuncG type="linear" slope="1.8" intercept="-0.4"/>
+      </feComponentTransfer>
+      <feDisplacementMap in="SourceGraphic" in2="m" scale="8"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ===================================================================
+         #lens-strong — for a hero shot where the glass IS the subject and you
+         want the bend to be unmistakable. Too much for anything with text.
+         =================================================================== -->
+    <filter id="lens-strong" x="-20%" y="-20%" width="140%" height="140%"
+            color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.010 0.014"
+                    numOctaves="3" seed="23" stitchTiles="stitch" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="7" result="s"/>
+      <feComponentTransfer in="s" result="m">
+        <feFuncR type="linear" slope="3.1" intercept="-1.0"/>
+        <feFuncG type="linear" slope="3.1" intercept="-1.0"/>
+      </feComponentTransfer>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22" result="a"/>
+      <feComponentTransfer in="a" result="rim">
+        <feFuncA type="table" tableValues="1 0.5 0.05"/>
+      </feComponentTransfer>
+      <feComposite in="m" in2="rim" operator="in" result="rn"/>
+      <feDisplacementMap in="SourceGraphic" in2="rn" scale="34"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ===================================================================
+         #grain-fine — film grain as a filter, for when you want it over the
+         whole frame rather than per-panel. Cheaper than the base64 PNG in
+         .grain because there is no image decode.
+         Apply to a full-bleed div with opacity .03-.05.
+         =================================================================== -->
+    <filter id="grain-fine" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3"
+                    stitchTiles="stitch" seed="3" result="g"/>
+      <feColorMatrix in="g" type="saturate" values="0"/>
+    </filter>
+
+  </defs>
+</svg>
+
+
+<div class="viewport"><div class="stage">
+
+  <!-- The background field, derived from the brand accent (see theme.ts).
+       Inside .stage because .stage is what gets rasterised: the renderer strips
+       every body child that does not contain it, so a wash placed outside the
+       stage is silently missing from every export while looking correct in
+       preview. Outside .camera so a push-in does not scale the backdrop along
+       with the scene.
+       The aurora's own filter does not flatten the glass above it -- it is a
+       sibling behind .camera, not an ancestor of any glass panel. -->
+  <div class="bg-aurora" aria-hidden="true" style="background:radial-gradient(38% 44% at 22% 26%, hsl(181 52% 50% / 0.4), transparent 70%), radial-gradient(32% 40% at 78% 30%, hsl(221 52% 50% / 0.3), transparent 70%), radial-gradient(46% 50% at 60% 84%, hsl(141 52% 50% / 0.22), transparent 72%);"></div>
+  <div class="bg-vignette" aria-hidden="true"
+     style="background:radial-gradient(78% 68% at 50% 46%, transparent 45%, rgba(20,28,32,.16) 100%);"></div>
+
+  <div class="camera" data-el="camera">
+
+    <section class="scene scene-3d" data-scene="reveal">
+      <div class="abs stack-v" data-el="lockup"
+           style="left:410px; top:324px; width:1100px; align-items:center; text-align:center; gap:30px;">
+        <div class="brand-word" data-el="logo" style="font-size:96px">Acme Analytics</div>
+      <div class="stack-v" style="text-align:center">
+      <div class="t-eyebrow" data-el="eyebrow">ACME ANALYTICS</div>
+      <div class="reveal-mask" data-el="headline-mask">
+        <span class="t-display" data-el="headline">Answers, not dashboards</span>
+      </div>
+      <div class="t-body" data-el="body">Ask in plain language. Get the number and the why.</div>
+      </div>
+      </div>
+    </section>
+
+    <section class="scene scene-3d" data-scene="proof">
+      <div class="abs stack-v" data-el="stat-block"
+           style="left:380px; top:350px; width:1160px; align-items:center; text-align:center; gap:26px;">
+      <div class="stat-label" data-el="stat-label">Time to first answer</div>
+      <div class="stat-value tnum reveal-mask" data-el="stat-value"><span>3.4x faster</span></div>
+      <div class="stat-body" data-el="stat-body">sample data, illustrative only</div>
+      </div>
+    </section>
+
+    <section class="scene scene-3d" data-scene="how">
+
+      <div class="abs d3 tilt-up" data-el="app-frame"
+           style="left:210px; top:170px; width:1500px;">
+        <div class="frame-window">
+          <div class="frame-bar" style="color:var(--label-3)">
+            <span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span>
+            <span class="frame-title">Acme Analytics</span>
+          </div>
+          <div class="stack-v" style="padding:34px; gap:24px;">
+
+            <!-- A metric strip spans the full window width; the rows and the action
+                 column then split the remaining space. Without the split, a wide
+                 window with four short rows leaves the right half empty and reads as
+                 a broken screen rather than as the product. -->
+      <div class="grid-2" style="grid-column:1 / -1;">
+            <div class="card glass metric" data-el="c1">
+              <div class="k">Events / month</div>
+              <div class="v tnum" data-el="c1-value">10,000+</div>
+              <div class="t-caption">sample data</div>
+            </div>
+            <div class="card glass metric" data-el="c2">
+              <div class="k">Queries answered</div>
+              <div class="v tnum" data-el="c2-value">98%</div>
+              <div class="t-caption">sample data</div>
+            </div>
+            </div>
+            <div class="grid-2">
+              <div class="rows">
+            <div class="row-item" data-el="r1">
+              <span class="stack-h stack-tight" style="color:var(--accent)"><svg class="icon icon-message" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+              <span class="name">Weekly active users</span>
+              <span class="badge badge-info">up 12%</span>
+            </div>
+            <div class="row-item" data-el="r2">
+              <span class="stack-h stack-tight" style="color:var(--accent)"><svg class="icon icon-message" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+              <span class="name">Checkout conversion</span>
+              <span class="badge badge-info">up 4%</span>
+            </div>
+            <div class="row-item" data-el="r3">
+              <span class="stack-h stack-tight" style="color:var(--accent)"><svg class="icon icon-message" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+              <span class="name">Churn risk accounts</span>
+              <span class="badge badge-info">down 8%</span>
+            </div>
+              </div>
+              <div class="stack-v">
+            <button class="btn btn-primary btn-lg glow-accent" data-el="b1">Open report</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene scene-3d" data-scene="end">
+      <div class="abs stack-v" data-el="end-card"
+           style="left:420px; top:324px; width:1080px; align-items:center; text-align:center; gap:34px;">
+        <div class="brand-word" data-el="logo" style="font-size:64px">Acme Analytics</div>
+        <div class="reveal-mask" data-el="headline-mask">
+          <span class="t-display" data-el="headline">Ready for answers?</span>
+        </div>
+  
+        <div class="stack-v" style="align-items:center; gap:20px;">
+          <button class="btn btn-primary btn-lg glow-accent" data-el="cta1"
+                  style="font-size:26px; height:68px; padding:0 40px;">Start free trial</button>
+          <div class="t-body" data-el="cta" style="font-size:24px">Start free trial</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cursor and ring: last children of .camera, OUTSIDE every scene, so a
+         cut does not take them with it. One pair for the whole film. -->
+    <svg class="cursor cursor--default" data-el="cursor" data-cursor-variant="default"
+         viewBox="0 0 13.4 18.9" style="left:0; top:0; opacity:0;" aria-hidden="true">
+      <path d="M0 0 L0 16.5 L4.2 12.6 L6.9 18.9 L9.7 17.7 L7 11.5 L13.4 11.5 Z" fill="var(--cursor-fill)" stroke="var(--cursor-edge)" stroke-width="1.2"/>
+    </svg>
+    <div class="click-ring" data-el="ring" style="left:0; top:0;"></div>
+  </div>
+
+  <!-- Film grade. This is what separates a graded frame from a screenshot of an
+       HTML page, and it MUST be a sibling of .camera, never an ancestor. The
+       overlay carries opacity < 1, and any ancestor with opacity < 1 becomes a
+       backdrop root: placed inside .camera, it would flatten every glass panel
+       beneath it and break backdrop-filter: url(#lens) refraction. A sibling
+       tints what the camera painted without changing how anything inside that
+       picture composited, and with no transition or @keyframes on it, a CSS
+       animation can never freeze under frame-by-frame export. -->
+  <div class="film-grade" aria-hidden="true"
+     style="background:
+        radial-gradient(120% 120% at 50% 42%, transparent 55%, rgba(20,28,32, 0.22) 100%),
+        linear-gradient(181deg, hsla(181 70% 60% / 0.055), hsla(221 70% 55% / 0.033), hsla(141 70% 50% / 0.044000000000000004));
+     "></div>
+</div></div>
+
+<!-- Load order is fixed and getting it wrong means nothing animates:
+     sfx.js first (the engine checks for window.SFX at mount), then the engine,
+     then this film's timeline. -->
+<script src="assets/sfx.js"></script>
+<script src="assets/timeline.js"></script>
+<script src="timeline.js"></script>
+</body>
+</html>
